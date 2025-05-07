@@ -24,15 +24,15 @@ export function ReservationModal({ event, isOpen, onClose, onSuccess }: Reservat
       // Primeiro verifica disponibilidade
       const availability = await reservationService.checkAvailability(event.uuid);
       
-      if (!availability.isAvailable) {
-        notificationRef.current?.showNotification(
-          "Não há vagas disponíveis no momento. Você será redirecionado para a lista de espera.",
-          "warning"
-        );
-        // Redirecionar para lista de espera
-        window.location.href = `/fila?event=${event.uuid}`;
-        return;
-      }
+      // if (!availability.isAvailable) {
+      //   notificationRef.current?.showNotification(
+      //     "Não há vagas disponíveis no momento. Você será redirecionado para a lista de espera.",
+      //     "warning"
+      //   );
+      //   // Redirecionar para lista de espera
+      //   window.location.href = `/fila?event=${event.uuid}`;
+      //   return;
+      // }
 
       // Se há vaga, tenta criar a reserva
       const reservation = await reservationService.createReservation({

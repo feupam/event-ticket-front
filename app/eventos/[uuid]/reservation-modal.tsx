@@ -22,14 +22,15 @@ export function ReservationModal({ event, isOpen, onClose, onSuccess }: Reservat
       setLoading(true);
       const response = await api.events.checkSpot(event.uuid, selectedTicket);
       
-      if (response.isAvailable) {
-        const reservationData = await api.events.reserveSpot(event.uuid, {
-          ticket_kind: selectedTicket,
-        });
-        onSuccess(reservationData);
-      } else {
-        // Mostrar mensagem de lista de espera
-      }
+      // if (response.isAvailable) {
+      //   const reservationData = await api.events.reserveSpot(event.uuid, {
+      //       ticket_kind: selectedTicket,
+      //       userType: "client"
+      //     });
+      //     onSuccess(reservationData);
+      // } else {
+      //   // Mostrar mensagem de lista de espera
+      // }
     } catch (error) {
       console.error('Erro ao fazer reserva:', error);
     } finally {

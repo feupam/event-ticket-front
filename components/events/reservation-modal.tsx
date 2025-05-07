@@ -30,6 +30,7 @@ export function ReservationModal({ event, isOpen, onClose, onSuccess }: Reservat
       if (response.isAvailable) {
         const reservationData = await api.events.reserveSpot(event.uuid, {
           ticket_kind: selectedTicket,
+          userType: "client"
         });
         onSuccess(reservationData);
         notificationRef.current?.showNotification(

@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { auth } from "@/lib/firebase";
 
 // Interface para erros de API
 interface ApiError {
@@ -14,7 +15,7 @@ interface ApiError {
 
 export const handleAuthError = async (error: ApiError) => {
   if (error?.response?.status === 401) {
-    useAuth.getState().signOut();
+    await auth.signOut();
     window.location.href = "/login";
   }
   
