@@ -45,30 +45,6 @@ const nextConfig = {
       }
     ]
   },
-  webpack: (config, { isServer }) => {
-    // Ativar minificação
-    config.optimization.minimize = true;
-    
-    // Configuração simplificada
-    config.optimization.splitChunks = {
-      chunks: 'all',
-      maxInitialRequests: 30,
-      maxAsyncRequests: 30,
-      minSize: 10000,
-      maxSize: 700000, // 700 KB por arquivo (abaixo do limite de 1MB)
-      cacheGroups: {
-        // Agrupar por biblioteca sem funções complexas
-        vendors: {
-          test: /[\\/]node_modules[\\/]/,
-          name: 'vendors',
-          priority: 10,
-          enforce: true,
-        }
-      }
-    };
-
-    return config;
-  },
 }
 
 module.exports = nextConfig;

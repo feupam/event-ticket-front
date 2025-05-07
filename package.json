@@ -6,8 +6,6 @@
     "dev": "next dev",
     "build": "next build",
     "export": "next build && next export -o out",
-    "cloudflare": "rimraf .next && next build && rimraf .next/cache .next/server .next/standalone",
-    "cloudflare:zip": "npm run cloudflare && powershell Compress-Archive -Path .next\\static, .next\\types -DestinationPath cloudflare_deploy.zip -Force",
     "start": "next start",
     "lint": "next lint"
   },
