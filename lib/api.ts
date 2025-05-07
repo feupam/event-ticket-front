@@ -2,13 +2,16 @@ import axios, { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'ax
 import { Event } from '@/types/event';
 import { auth } from './firebase';
 
+// Verificar se a variável de ambiente está definida
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const API_TIMEOUT = 15000; // 15 segundos
 
-console.log('[API Config] API_URL:', API_URL);
+// Log para debug
+console.log('[API Config] API_URL:', API_URL || 'Não definida');
 
+// Se não estiver definida, apenas log de aviso em vez de quebrar a aplicação
 if (!API_URL) {
-  throw new Error('NEXT_PUBLIC_API_URL não está definido no arquivo .env');
+  console.warn('[API Config] AVISO: NEXT_PUBLIC_API_URL não está definida. Algumas funcionalidades podem não funcionar corretamente.');
 }
 
 interface RequestOptions extends RequestInit {
@@ -118,6 +121,12 @@ axiosInstance.interceptors.response.use(
 export async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   console.log(`[API Request] Iniciando requisição para ${endpoint}`, { options });
 
+  // Verificar se a URL da API está definida
+  if (!API_URL) {
+    console.error('[API Request] URL da API não definida');
+    throw new Error('Configuração da API incompleta. Contacte o administrador.');
+  }
+
   const online = await isOnline();
   if (!online) {
     console.error('[API Request] Dispositivo offline');
@@ -201,6 +210,12 @@ export const api = {
     list: async () => {
       console.log('[API Events] Listando eventos...');
       try {
+        // Verificar se a URL da API está definida
+        if (!API_URL) {
+          console.error('[API Events] URL da API não definida');
+          return []; // Retorna array vazio em vez de quebrar a aplicação
+        }
+        
         const response = await axiosInstance.get<Event[]>('/events');
         return response.data;
       } catch (error) {
