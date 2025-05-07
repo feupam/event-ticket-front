@@ -45,36 +45,24 @@ const nextConfig = {
       }
     ]
   },
-  webpack: (config, { isServer, dev }) => {
-    // Ativar otimizações do webpack mesmo em modo de desenvolvimento
+  webpack: (config, { isServer }) => {
+    // Ativar minificação
     config.optimization.minimize = true;
     
-    // Dividir o bundle em partes menores (chunks)
+    // Configuração simplificada
     config.optimization.splitChunks = {
       chunks: 'all',
-      maxInitialRequests: 25,
-      minSize: 20000,
-      maxSize: 1000000, // 1MB por arquivo
+      maxInitialRequests: 30,
+      maxAsyncRequests: 30,
+      minSize: 10000,
+      maxSize: 700000, // 700 KB por arquivo (abaixo do limite de 1MB)
       cacheGroups: {
-        // Separar cada biblioteca grande em seu próprio chunk
-        firebase: {
-          test: /[\\/]node_modules[\\/](firebase|@firebase)[\\/]/,
-          name: 'firebase',
-          priority: 20,
-        },
-        framework: {
-          test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-          name: 'framework',
-          priority: 10,
-        },
-        commons: {
+        // Agrupar por biblioteca sem funções complexas
+        vendors: {
           test: /[\\/]node_modules[\\/]/,
-          name(module) {
-            // Obter o nome do pacote para dar nomes significativos aos chunks
-            const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
-            return `npm.${packageName.replace('@', '')}`;
-          },
-          priority: 5,
+          name: 'vendors',
+          priority: 10,
+          enforce: true,
         }
       }
     };

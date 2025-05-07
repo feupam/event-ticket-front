@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "export": "next build && next export -o out",
+    "cloudflare": "rimraf .next && next build && rimraf .next/cache .next/server .next/standalone",
+    "cloudflare:zip": "npm run cloudflare && powershell Compress-Archive -Path .next\\static, .next\\types -DestinationPath cloudflare_deploy.zip -Force",
     "start": "next start",
     "lint": "next lint"
   },
@@ -73,5 +76,8 @@
     "typescript": "5.2.2",
     "vaul": "^0.9.9",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1"
   }
 }
