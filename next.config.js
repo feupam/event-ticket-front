@@ -9,7 +9,8 @@ const nextConfig = {
     VITE_FIREBASE_MESSAGING_SENDER_ID: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
     VITE_FIREBASE_APP_ID: process.env.VITE_FIREBASE_APP_ID,
     VITE_FIREBASE_MEASUREMENT_ID: process.env.VITE_FIREBASE_MEASUREMENT_ID,
-    VITE_API_URL: process.env.VITE_API_URL
+    VITE_API_URL: process.env.VITE_API_URL,
+    NEXT_PUBLIC_API_URL: process.env.VITE_API_URL
   },
   images: {
     unoptimized: true,
