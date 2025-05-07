@@ -1,36 +1,31 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { SAMPLE_EVENTS } from '@/lib/constants';
-import { Event } from '@/lib/types';
-import QueueStatus from '@/components/queue/queue-status';
+import { useEvents } from '@/hooks/useEvents';
+import { QueuePage }  from '@/components/queue/QueuePage';
+import { QueueProvider } from '@/components/queue/QueueContext';
 
-export default function QueuePage() {
+export default function QueuePageTest() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const eventSlug = searchParams.get('event');
-  const [event, setEvent] = useState<Event | null>(null);
-  
+  const eventUuid = searchParams.get('event');
+  const { events, loading, getEventByUuid } = useEvents();
+
   useEffect(() => {
-    if (!eventSlug) {
+    if (!eventUuid) {
       router.push('/eventos');
       return;
     }
-    
-    const foundEvent = SAMPLE_EVENTS.find(e => e.slug === eventSlug);
-    
-    if (!foundEvent) {
-      router.push('/eventos');
-      return;
-    }
-    
-    setEvent(foundEvent);
-  }, [eventSlug, router]);
-  
-  if (!event) {
-    return null; // Loading state (will redirect if no event is found)
-  }
-  
-  return <QueueStatus event={event} />;
+
+  }, [eventUuid, router, loading, getEventByUuid]);
+
+  if (loading || !eventUuid) return null;
+
+  const event = getEventByUuid(eventUuid);
+  if (!event) return null;
+
+  return  <QueueProvider>
+    <QueuePage />
+  </QueueProvider>;
 }

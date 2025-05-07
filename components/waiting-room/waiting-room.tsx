@@ -19,6 +19,7 @@ export default function WaitingRoom({ event }: WaitingRoomProps) {
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 });
   const [isPulsing, setIsPulsing] = useState(false);
   const [message, setMessage] = useState('');
+  const [isReady, setIsReady] = useState(false);
   
   // Simulate waiting room states
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function WaitingRoom({ event }: WaitingRoomProps) {
         setMessage('Sales have started! Redirecting to queue...');
         
         setTimeout(() => {
-          router.push(`/fila?event=${event.slug}`);
+          router.push(`/fila?event=${event.uuid}`);
         }, 3000);
       }
       
@@ -49,7 +50,12 @@ export default function WaitingRoom({ event }: WaitingRoomProps) {
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [event.salesStart, router, event.slug]);
+  }, [event.salesStart, router, event.uuid]);
+  
+  const handleSalesStart = () => {
+    setIsReady(true);
+    router.push(`/fila?event=${event.uuid}`);
+  };
   
   return (
     <AnimatedBackground intensity="medium" speed="medium" className="min-h-screen flex flex-col items-center justify-center p-4">
@@ -132,7 +138,7 @@ export default function WaitingRoom({ event }: WaitingRoomProps) {
             
             <Button
               variant="outline"
-              onClick={() => router.push(`/eventos/${event.slug}`)}
+              onClick={() => router.push(`/eventos/${event.uuid}`)}
               className="w-full"
             >
               Return to Event Details

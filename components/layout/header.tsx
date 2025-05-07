@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Menu, X, Ticket, Sun, Moon } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { UserMenu } from '@/components/UserMenu';
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -17,6 +19,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const pathname = usePathname();
+  const { user } = useAuth();
   
   useEffect(() => {
     // Verifica o tema salvo no localStorage ou a preferência do sistema
@@ -84,12 +87,16 @@ export default function Header() {
             )}
           </button>
           
+          {user ? (
+            <UserMenu />
+          ) : (
           <Link
-            href="/account"
+              href="/login"
             className="text-sm font-medium text-foreground/80 hover:text-primary"
           >
-            My Account
+              Entrar
           </Link>
+          )}
         </div>
       </nav>
       
@@ -98,19 +105,11 @@ export default function Header() {
         <div className="lg:hidden fixed inset-0 z-50 bg-background/95 backdrop-blur">
           <div className="fixed inset-0 overflow-y-auto">
             <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <div className="w-full max-w-md">
-                <div className="flex items-center justify-between mb-6">
-                  <Link 
-                    href="/" 
-                    className="flex items-center gap-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Ticket className="h-6 w-6 text-primary" />
-                    <span className="font-bold text-lg text-foreground">EventFlow</span>
-                  </Link>
+              <div className="relative transform overflow-hidden rounded-lg bg-background text-left shadow-xl transition-all w-full max-w-sm">
+                <div className="absolute right-0 top-0 p-4">
                   <button
                     type="button"
-                    className="p-2 rounded-md text-foreground"
+                    className="-m-2.5 rounded-md p-2.5 text-foreground"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <span className="sr-only">Close menu</span>
@@ -118,8 +117,8 @@ export default function Header() {
                   </button>
                 </div>
                 
-                <div className="mt-6 flow-root">
-                  <div className="flex flex-col gap-6 py-6">
+                <div className="p-6">
+                  <div className="flex flex-col gap-6">
                     {navigation.map((item) => (
                       <Link
                         key={item.name}
@@ -133,35 +132,32 @@ export default function Header() {
                         {item.name}
                       </Link>
                     ))}
-                  </div>
-                  <div className="py-6 flex items-center justify-between">
-                    <button
-                      onClick={() => {
-                        toggleTheme();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="text-base font-medium text-foreground/80 hover:text-primary flex items-center gap-2"
-                    >
-                      {theme === 'light' ? (
-                        <>
-                          <Moon className="h-5 w-5" />
-                          <span>Dark Mode</span>
-                        </>
-                      ) : (
-                        <>
-                          <Sun className="h-5 w-5" />
-                          <span>Light Mode</span>
-                        </>
-                      )}
-                    </button>
                     
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={toggleTheme}
+                        className="p-2 rounded-md text-foreground/80 hover:text-primary transition-colors"
+                        aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                      >
+                        {theme === 'light' ? (
+                          <Moon className="h-5 w-5" />
+                        ) : (
+                          <Sun className="h-5 w-5" />
+                        )}
+                      </button>
+                      
+                      {user ? (
+                        <UserMenu />
+                      ) : (
                     <Link
-                      href="/account"
+                          href="/login"
                       className="text-base font-medium text-foreground/80 hover:text-primary"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      My Account
+                          Entrar
                     </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

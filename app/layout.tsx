@@ -1,10 +1,9 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import Header from '@/components/layout/header';
-import Footer from '@/components/layout/footer';
-import { ThemeProvider } from '@/components/theme-provider'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils';
+import { Providers } from '@/components/providers';
+import RootClientLayout from '@/components/RootClientLayout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,13 +20,11 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={cn('min-h-screen bg-background font-sans antialiased', inter.className)}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </ThemeProvider>
+        <Providers>
+          <RootClientLayout>
+            {children}
+          </RootClientLayout>
+        </Providers>
       </body>
     </html>
   );

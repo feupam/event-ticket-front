@@ -1,3 +1,5 @@
+'use client';
+
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from './ui/button';
 import { Loader2 } from 'lucide-react';

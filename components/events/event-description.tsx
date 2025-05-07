@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle } from 'lucide-react';
-import { Event } from '@/lib/types';
+import { Event } from '@/types/event';
 import { Separator } from '@/components/ui/separator';
 
 interface EventDescriptionProps {

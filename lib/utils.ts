@@ -1,16 +1,17 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { Event, QueueStatus } from './types';
+import { Event } from '@/types/event';
+import { QueueStatus } from './types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(value: number, currency: string = 'BRL'): string {
+  return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: currency,
-  }).format(amount);
+    currency: currency
+  }).format(value);
 }
 
 export function formatDate(dateStr: string): string {
@@ -53,21 +54,22 @@ export function getTimeRemaining(targetDate: string): {
 }
 
 export function formatWaitTime(minutes: number): string {
-  if (minutes < 1) {
-    return 'Less than a minute';
-  }
-  if (minutes < 60) {
-    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
-  }
+  if (minutes < 1) return 'menos de 1 minuto';
+  if (minutes === 1) return '1 minuto';
+  if (minutes < 60) return `${minutes} minutos`;
   
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   
-  if (remainingMinutes === 0) {
-    return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  if (hours === 1) {
+    if (remainingMinutes === 0) return '1 hora';
+    if (remainingMinutes === 1) return '1 hora e 1 minuto';
+    return `1 hora e ${remainingMinutes} minutos`;
   }
   
-  return `${hours} hour${hours !== 1 ? 's' : ''} and ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}`;
+  if (remainingMinutes === 0) return `${hours} horas`;
+  if (remainingMinutes === 1) return `${hours} horas e 1 minuto`;
+  return `${hours} horas e ${remainingMinutes} minutos`;
 }
 
 export function getEventAvailabilityStatus(event: Event): {
@@ -81,32 +83,32 @@ export function getEventAvailabilityStatus(event: Event): {
       event.salesStart && new Date(event.salesStart) > now) {
     return {
       status: 'waiting_room',
-      text: 'Waiting Room Open'
+      text: 'Sala de espera aberta'
     };
   }
   
-  if (event.availability === 0) {
+  if (event.availability !== undefined && event.availability === 0) {
     return {
       status: 'sold_out',
-      text: 'Sold Out'
+      text: 'Esgotado'
     };
   }
   
-  if (event.availability < 50) {
+  if (event.availability !== undefined && event.availability < 50) {
     return {
       status: 'limited',
-      text: 'Limited Tickets'
+      text: 'Últimos ingressos'
     };
   }
   
   return {
     status: 'available',
-    text: 'Available'
+    text: 'Disponível'
   };
 }
 
 // Mock function to simulate generated queue statuses
-export function generateMockQueueStatus(eventId: string, userId: string): QueueStatus {
+export function generateMockQueueStatus(eventUuid: string): QueueStatus {
   // Simulate different positions and wait times
   const position = Math.floor(Math.random() * 5000) + 1;
   const estimatedWaitTime = Math.ceil(position / 10); // Rough estimate: 10 people per minute
@@ -115,7 +117,6 @@ export function generateMockQueueStatus(eventId: string, userId: string): QueueS
     position,
     estimatedWaitTime,
     totalAhead: position - 1,
-    eventId,
     updated: new Date().toISOString()
   };
 }

@@ -24,9 +24,9 @@ export const LOCATIONS = [
 
 export const SAMPLE_EVENTS = [
   {
+    uuid: "taylor-swift-eras-tour",
     id: "1",
     title: "Taylor Swift | The Eras Tour",
-    slug: "taylor-swift-eras-tour",
     description: "Experience Taylor Swift's record-breaking Eras Tour, showcasing music from all phases of her iconic career. The show features elaborate sets, multiple costume changes, and all her biggest hits across a spectacular 3-hour performance.",
     shortDescription: "Taylor Swift's record-breaking tour featuring music from all eras of her career",
     date: "2025-06-15",
@@ -43,9 +43,9 @@ export const SAMPLE_EVENTS = [
     salesStart: "2025-06-01T10:00:00Z"
   },
   {
+    uuid: "nba-finals-2025",
     id: "2",
     title: "NBA Finals 2025",
-    slug: "nba-finals-2025",
     description: "Witness basketball history at the NBA Finals 2025. Experience the culmination of the season as the two best teams in the league battle for the championship in this best-of-seven series finale.",
     shortDescription: "The championship final of the National Basketball Association",
     date: "2025-06-20",
@@ -62,9 +62,9 @@ export const SAMPLE_EVENTS = [
     salesStart: "2025-05-25T14:00:00Z"
   },
   {
+    uuid: "hamilton-the-musical",
     id: "3",
     title: "Hamilton: The Musical",
-    slug: "hamilton-the-musical",
     description: "Don't miss the chance to see the revolutionary musical that took Broadway by storm. Hamilton tells the story of America's founding father Alexander Hamilton through a blend of hip-hop, jazz, R&B, and traditional show tunes.",
     shortDescription: "Award-winning musical about the life of American founding father Alexander Hamilton",
     date: "2025-07-05",
@@ -81,9 +81,9 @@ export const SAMPLE_EVENTS = [
     salesStart: "2025-06-15T10:00:00Z"
   },
   {
+    uuid: "coachella-2025",
     id: "4",
     title: "Coachella Music Festival 2025",
-    slug: "coachella-2025",
     description: "Join the world's most famous music and arts festival featuring the biggest artists across all genres, stunning art installations, and an unforgettable experience in the California desert.",
     shortDescription: "World-famous annual music and arts festival in the California desert",
     date: "2025-04-10",
@@ -100,9 +100,9 @@ export const SAMPLE_EVENTS = [
     salesStart: "2025-01-10T10:00:00Z"
   },
   {
+    uuid: "kevin-hart-reality-check",
     id: "5",
     title: "Kevin Hart: Reality Check Tour",
-    slug: "kevin-hart-reality-check",
     description: "Laugh until it hurts with Kevin Hart's latest world tour. Experience one of comedy's biggest stars as he delivers his signature high-energy performance and hilarious observations on life, family, and success.",
     shortDescription: "Kevin Hart's latest world comedy tour with all-new material",
     date: "2025-05-25",
@@ -117,9 +117,9 @@ export const SAMPLE_EVENTS = [
     isHighDemand: false
   },
   {
+    uuid: "disney-on-ice-magic-of-dreams",
     id: "6",
     title: "Disney On Ice: Magic of Dreams",
-    slug: "disney-on-ice-magic-of-dreams",
     description: "Disney On Ice presents Magic of Dreams, where beloved Disney characters take to the ice in a spectacular skating showcase. Featuring characters from Frozen, Moana, Toy Story, and more, this show promises fun for the whole family.",
     shortDescription: "Family-friendly ice skating show featuring beloved Disney characters",
     date: "2025-03-15",

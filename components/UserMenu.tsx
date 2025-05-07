@@ -1,7 +1,10 @@
+'use client';
+
 import { useAuth } from '@/hooks/useAuth';
 import { LogoutButton } from './LogoutButton';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import Link from 'next/link';
 
 export function UserMenu() {
   const { user } = useAuth();
@@ -22,6 +25,11 @@ export function UserMenu() {
         <DropdownMenuItem className="flex flex-col items-start gap-1">
           <span className="font-medium">{user.displayName}</span>
           <span className="text-sm text-muted-foreground">{user.email}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/perfil" className="cursor-pointer">
+            Meu Perfil
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem>
           <LogoutButton />

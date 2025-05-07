@@ -5,11 +5,22 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { formatWaitTime, generateMockQueueStatus } from '@/lib/utils';
-import { Event, QueueStatus } from '@/lib/types';
+import { isProfileComplete } from '@/lib/utils/profile';
+import { Event } from '@/types/event';
 import AnimatedBackground from '@/components/ui/animated-background';
 import { Progress } from '@/components/ui/progress';
-import { Users, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Users, Clock, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { api } from '@/services/api';
+import { auth } from '@/lib/firebase';
+import userService from '@/services/userService';
+
+interface QueueStatus {
+  position: number;
+  estimatedWaitTime: number;
+  totalAhead: number;
+  updated: string;
+}
 
 interface QueueStatusProps {
   event: Event;
@@ -21,6 +32,8 @@ export default function QueueStatusComponent({ event, initialStatus }: QueueStat
   const [status, setStatus] = useState<QueueStatus | null>(initialStatus || null);
   const [isReady, setIsReady] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(600); // 10 minute window to purchase
+  const [isCheckingProfile, setIsCheckingProfile] = useState(false);
+  const [profileIsComplete, setProfileIsComplete] = useState(false);
   
   // Simulate queue status updates
   useEffect(() => {
@@ -28,7 +41,7 @@ export default function QueueStatusComponent({ event, initialStatus }: QueueStat
     
     // Initial status if not provided
     if (!status) {
-      setStatus(generateMockQueueStatus(event.id, "user123"));
+      setStatus(generateMockQueueStatus(event.uuid));
     }
     
     // Update queue position every 5-10 seconds
@@ -57,7 +70,7 @@ export default function QueueStatusComponent({ event, initialStatus }: QueueStat
     }, 5000 + Math.random() * 5000);
     
     return () => clearInterval(interval);
-  }, [event.id, status, isReady]);
+  }, [event.uuid, status, isReady]);
   
   // Countdown timer once they're ready to purchase
   useEffect(() => {
@@ -69,7 +82,7 @@ export default function QueueStatusComponent({ event, initialStatus }: QueueStat
           clearInterval(timer);
           // Send back to waiting room or event page when time expires
           setTimeout(() => {
-            router.push(`/eventos/${event.slug}`);
+            router.push(`/eventos/${event.uuid}`);
           }, 3000);
           return 0;
         }
@@ -78,7 +91,39 @@ export default function QueueStatusComponent({ event, initialStatus }: QueueStat
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [isReady, router, event.slug]);
+  }, [isReady, router, event.uuid]);
+  
+  // Verifica se o perfil do usuário está completo
+  useEffect(() => {
+    const checkUserProfile = async () => {
+      try {
+        if (auth.currentUser) {
+          setIsCheckingProfile(true);
+          const userProfile = await userService.getProfile();
+          setProfileIsComplete(isProfileComplete(userProfile));
+        }
+      } catch (error) {
+        setProfileIsComplete(false);
+      } finally {
+        setIsCheckingProfile(false);
+      }
+    };
+
+    if (isReady) {
+      checkUserProfile();
+    }
+  }, [isReady]);
+
+  const handleProceedToCheckout = () => {
+    // Se o perfil não estiver completo, redireciona para a página de edição com retorno para checkout
+    if (!profileIsComplete) {
+      router.push(`/perfil/editar/${event.uuid}`);
+      return;
+    }
+
+    // Se o perfil estiver completo, continua normalmente para o checkout
+    router.push(`/checkout/${event.uuid}`);
+  };
   
   // Format the remaining time
   const formatRemainingTime = () => {
@@ -104,7 +149,7 @@ export default function QueueStatusComponent({ event, initialStatus }: QueueStat
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent flex items-center justify-center">
               <h1 className="text-2xl sm:text-3xl font-bold text-center px-4 drop-shadow-sm">
-                {isReady ? "Your Turn!" : "Queue: " + event.title}
+                {isReady ? "Sua Vez!" : "Fila: " + event.title}
               </h1>
             </div>
           </div>
@@ -115,17 +160,17 @@ export default function QueueStatusComponent({ event, initialStatus }: QueueStat
                 <div className="text-center space-y-2">
                   <div className="inline-flex items-center justify-center space-x-2 text-lg text-primary font-medium">
                     <Users className="h-5 w-5" />
-                    <span>Position in queue: {status.position}</span>
+                    <span>Posição na fila: {status.position}</span>
                   </div>
                   
                   <p className="text-muted-foreground">
-                    There {status.totalAhead === 1 ? 'is' : 'are'} {status.totalAhead} {status.totalAhead === 1 ? 'person' : 'people'} ahead of you
+                    {status.totalAhead === 1 ? 'Há' : 'Há'} {status.totalAhead} {status.totalAhead === 1 ? 'pessoa' : 'pessoas'} na sua frente
                   </p>
                 </div>
                 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Queue progress</span>
+                    <span>Progresso na fila</span>
                     <span className="text-primary font-medium">
                       {Math.min(99, Math.max(0, 100 - (status.position / 5000 * 100))).toFixed(0)}%
                     </span>
@@ -138,23 +183,23 @@ export default function QueueStatusComponent({ event, initialStatus }: QueueStat
                 
                 <div className="flex items-center justify-center space-x-2 text-lg font-medium">
                   <Clock className="h-5 w-5 text-muted-foreground" />
-                  <span>Estimated wait time: <span className="text-primary">{formatWaitTime(status.estimatedWaitTime)}</span></span>
+                  <span>Tempo estimado de espera: <span className="text-primary">{formatWaitTime(status.estimatedWaitTime)}</span></span>
                 </div>
                 
                 <div className="bg-muted/50 rounded-md p-4 space-y-4">
                   <div className="flex items-start space-x-3">
                     <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-medium">Stay on this page</p>
-                      <p className="text-muted-foreground">Leaving or refreshing this page will cause you to lose your place in line.</p>
+                      <p className="font-medium">Permaneça nesta página</p>
+                      <p className="text-muted-foreground">Sair ou atualizar esta página fará você perder seu lugar na fila.</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start space-x-3">
                     <Clock className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-medium">You'll be notified when it's your turn</p>
-                      <p className="text-muted-foreground">We'll alert you when it's your turn to purchase tickets.</p>
+                      <p className="font-medium">Você será notificado quando for sua vez</p>
+                      <p className="text-muted-foreground">Avisaremos quando for sua vez de comprar os ingressos.</p>
                     </div>
                   </div>
                 </div>
@@ -170,11 +215,11 @@ export default function QueueStatusComponent({ event, initialStatus }: QueueStat
                   <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-3">
                     <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
                   </div>
-                  <h2 className="text-xl font-bold">It's your turn!</h2>
-                  <p className="text-muted-foreground">You have been moved to the front of the line.</p>
+                  <h2 className="text-xl font-bold">É a sua vez!</h2>
+                  <p className="text-muted-foreground">Você foi movido para o início da fila.</p>
                   
                   <div className="flex flex-col items-center mt-2 space-y-2">
-                    <p className="text-sm text-muted-foreground">Time remaining to complete your purchase:</p>
+                    <p className="text-sm text-muted-foreground">Tempo restante para completar sua compra:</p>
                     <div className="text-3xl font-bold text-primary">{formatRemainingTime()}</div>
                     <Progress 
                       value={(secondsLeft / 600) * 100} 
@@ -187,16 +232,24 @@ export default function QueueStatusComponent({ event, initialStatus }: QueueStat
                   <Button 
                     size="lg"
                     className="w-full"
-                    onClick={() => router.push(`/checkout/${event.slug}`)}
+                    onClick={handleProceedToCheckout}
+                    disabled={isCheckingProfile}
                   >
-                    Continue to Checkout
+                    {isCheckingProfile ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Verificando...
+                      </>
+                    ) : (
+                      'Continuar para o Pagamento'
+                    )}
                   </Button>
                   
                   <Button
                     variant="outline"
-                    onClick={() => router.push(`/eventos/${event.slug}`)}
+                    onClick={() => router.push(`/eventos/${event.uuid}`)}
                   >
-                    Return to Event Details
+                    Voltar para Detalhes do Evento
                   </Button>
                 </div>
                 
@@ -204,8 +257,8 @@ export default function QueueStatusComponent({ event, initialStatus }: QueueStat
                   <div className="flex items-start space-x-3">
                     <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-medium">Limited time offer</p>
-                      <p>Your spot is reserved for a limited time. Please complete your purchase before the timer expires.</p>
+                      <p className="font-medium">Oferta por tempo limitado</p>
+                      <p>Sua vaga está reservada por tempo limitado. Por favor, complete sua compra antes que o tempo expire.</p>
                     </div>
                   </div>
                 </div>
