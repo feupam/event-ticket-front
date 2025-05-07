@@ -5,7 +5,7 @@ import BackgroundCarousel from '@/components/countdown/BackgroundCarousel';
 import EventSection from '@/components/countdown/EventSection';
 import { api } from '@/services/api';
 import { useEvents } from '@/hooks/useEvents';
-import YouTubeAudioPlayer from '@/components/media/YouTubeAudioPlayer';
+
 
 const carouselImages = [
   '/images/carousel/bg%20(1).jpeg',
@@ -67,7 +67,7 @@ export default function CountdownStandalone({ params }: CountdownPageProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black overflow-hidden">
-      <YouTubeAudioPlayer videoId="PmP6LiFUmTw?si=BjteJbACehuVIvnx" autoplay />
+     
       <BackgroundCarousel images={carouselImages} transitionTime={6000} />
       <div className="w-full max-w-2xl p-8 z-10">
         <div className="flex flex-col items-center justify-center">
@@ -80,9 +80,9 @@ export default function CountdownStandalone({ params }: CountdownPageProps) {
           )}
           {event && currentDate && (
             <EventSection
-              eventName={event.name}
-              eventDescription={event.eventType}
-              eventDate={`${new Date(event.startDate).toLocaleDateString('pt-BR')} a ${new Date(event.endDate).toLocaleDateString('pt-BR')}`}
+              eventName="FederaAcamps 2025"
+              eventDescription="O acampamento mais esperado do ano, com os convidados Andreia Vargas, Pr. Daniel Simoncelos e Miquéias Medeiros."
+              eventDate="18 a 22 de Junho"
               eventLocation={event.location}
               currentDate={currentDate}
               startDate={event.startDate}

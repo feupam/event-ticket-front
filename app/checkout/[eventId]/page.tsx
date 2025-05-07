@@ -17,6 +17,7 @@ import { api } from '@/lib/api';
 import { auth } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { useInstallments } from '@/components/providers';
+import { EventsProvider } from '@/contexts/EventsContext';
 
 interface CheckoutPageProps {
   params: {
@@ -68,6 +69,9 @@ export default function CheckoutPage({ params, searchParams }: CheckoutPageProps
 
   // Use o contexto de parcelamento em vez de estado local
   const { installmentOptions, isLoading: loadingInstallments, fetchInstallments } = useInstallments();
+
+  // Ref para controlar se já buscou o evento
+  const eventFetched = useRef(false);
 
   // Função para obter o tempo restante com base no timestamp salvo
   const getRemainingTime = (): number => {
@@ -238,6 +242,10 @@ export default function CheckoutPage({ params, searchParams }: CheckoutPageProps
 
   useEffect(() => {
     async function fetchEvent() {
+      // Se já buscou o evento, não busca novamente
+      if (eventFetched.current) return;
+      eventFetched.current = true;
+      
       try {
         const data = await api.events.get(params.eventId);
         setEvent(data);
@@ -354,11 +362,13 @@ export default function CheckoutPage({ params, searchParams }: CheckoutPageProps
         setLoading(false);
         return;
       }
+      
+      // Busca os dados em paralelo para reduzir tempo de carregamento
       fetchEvent();
       fetchReservationData();
       
-      // Buscar opções de parcelamento usando o contexto
-      if (params.eventId) {
+      // Buscar opções de parcelamento usando o contexto somente uma vez
+      if (params.eventId && !eventFetched.current) {
         fetchInstallments(params.eventId);
       }
     });

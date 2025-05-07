@@ -121,40 +121,9 @@ export default function PaymentForm({ event, onSubmit, reservationData, spotId }
       const existingReservation = localStorage.getItem('reservationData');
       const hasExistingReservation = existingReservation && JSON.parse(existingReservation).eventId === event.uuid;
       
-      // Verifica o status da reserva de acordo com a condição
-      if (event && event.uuid) {
-        try {
-          console.log("Verificando status da reserva antes de prosseguir...");
-          
-          // Se já possui uma reserva, usa /retry, caso contrário usa /purchase
-          let reservationStatus;
-          if (hasExistingReservation) {
-            console.log("Reserva existente encontrada, usando retry...");
-            reservationStatus = await api.tickets.retryPurchase(event.uuid);
-          } else {
-            console.log("Nova reserva, usando purchase...");
-            reservationStatus = await api.tickets.purchase(event.uuid);
-          }
-          
-          // Verifica se o status é válido para continuar com o pagamento
-          if (reservationStatus && reservationStatus.status === "expired") {
-            setError("Sua reserva expirou. Atualize a página para fazer uma nova reserva.");
-            return;
-          }
-          
-          // Se o status for "reserved" mas o tempo restante for muito baixo, atualizamos o localStorage
-          if (reservationStatus && reservationStatus.status === "reserved" && reservationStatus.remainingMinutes) {
-            console.log(`Reserva válida. Tempo restante: ${reservationStatus.remainingMinutes} minutos`);
-            
-            // Atualiza o timestamp no localStorage
-            localStorage.setItem('reservationTimestamp', new Date().toISOString());
-          }
-        } catch (error) {
-          console.error("Erro ao verificar status da reserva:", error);
-          // Continuamos mesmo se ocorrer erro, para não impedir o pagamento
-        }
-      }
-
+      // Não precisamos mais verificar o status da reserva usando retry, já temos os dados necessários
+      // para fazer o pagamento diretamente
+      
       // Encontra a opção de parcelamento selecionada, ou usa o valor padrão do evento
       const selectedOption = installmentOptions.find(option => option.number === selectedInstallment) || 
                             { number: 1, valueInCents: event.price || 0 };

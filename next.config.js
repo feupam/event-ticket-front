@@ -30,6 +30,20 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/countdown/federa',
+        permanent: true,
+      },
+      {
+        source: '/eventos',
+        destination: '/countdown/federa',
+        permanent: true,
+      }
+    ]
+  },
 }
 
 module.exports = nextConfig;

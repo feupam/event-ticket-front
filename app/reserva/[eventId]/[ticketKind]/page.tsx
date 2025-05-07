@@ -355,12 +355,12 @@ export default function ReservationPage({ params }: ReservationPageProps) {
         return (
           <div className="flex flex-col items-center justify-center py-12 px-4">
             <CheckCircle2 className="w-16 h-16 text-green-500 mb-6" />
-            <h2 className="text-2xl font-semibold mb-3 text-center">Reserva realizada com sucesso!</h2>
+            <h2 className="text-2xl font-semibold mb-3 text-center">Reserva realizada!</h2>
             <p className="text-muted-foreground text-center mb-2 max-w-xs">
-              Seu ingresso foi reservado. Você tem 10 minutos para concluir a compra.
+              Você tem 10 minutos para concluir a compra.
             </p>
             <p className="text-sm text-muted-foreground mb-8 max-w-xs text-center">
-              Após esse período, a reserva será cancelada automaticamente.
+              Após esse período, a reserva será cancelada automaticamente. Avance para o pagamento.
             </p>
             <Button size="lg" className="w-full max-w-xs" onClick={handleProceedToCheckout}>
               Continuar para pagamento

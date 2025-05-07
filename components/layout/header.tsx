@@ -9,10 +9,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { UserMenu } from '@/components/UserMenu';
 
 const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'Events', href: '/eventos' },
-  { name: 'How It Works', href: '/how-it-works' },
-  { name: 'FAQ', href: '/faq' },
+  { name: 'FederaAcamps 2025', href: '/countdown/federa' },
+  { name: 'Perfil', href: '/perfil' },
 ];
 
 export default function Header() {

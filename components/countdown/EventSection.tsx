@@ -1,7 +1,7 @@
 import React from 'react';
 import CountdownTimer from './CountdownTimer';
 import { CalendarCheck, MapPin, Clock } from 'lucide-react';
-
+import { TipsCarousel } from './TipsCarousel';
 
 interface EventSectionProps {
   eventName: string;
@@ -98,15 +98,20 @@ const EventSection: React.FC<EventSectionProps> = ({
             Saiba mais
           </a>
           <a 
-            href={isIOS ? appleCalendarLink : googleCalendarLink} 
-            target="_blank" 
-            rel="noopener noreferrer" 
+            href="/perfil" 
             className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
           >
-            Avise-me
+            Atualize seus dados
           </a>
         </div>
       </div>
+      <div className="mt-10">
+        <TipsCarousel />
+      </div>
+        <iframe style={{borderRadius: "12px", marginTop: "50px", zIndex: "20", position: "relative"}}
+        src="https://open.spotify.com/embed/playlist/58hinm29pkP3W3HUznd1TL?utm_source=generator" width="100%" height="152" frameBorder="0"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+        loading="lazy"></iframe>
     </div>
   );
 };
