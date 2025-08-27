@@ -1,8 +1,19 @@
 import { api } from './api';
 
-interface EventStatusResponse {
-  currentDate: string;
+export interface EventData {
+  id: number;
+  name: string;
+  description: string;
+  date: string;
+  location: string;
+  startDate: string;
+  endDate: string;
   isOpen: boolean;
+}
+
+export interface EventStatusResponse {
+  currentDate: string;
+  events: EventData[];
 }
 
 export const eventService = {
@@ -10,4 +21,4 @@ export const eventService = {
     const response = await api.get<EventStatusResponse>(`/events/${eventId}/event-status`);
     return response.data;
   }
-}; 
+};
