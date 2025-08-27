@@ -10,6 +10,8 @@ interface EventSectionProps {
   eventLocation: string;
   currentDate: string;
   startDate: string;
+  endDate: string;
+  isOpen: boolean;
 }
 
 const EventSection: React.FC<EventSectionProps> = ({
@@ -18,7 +20,9 @@ const EventSection: React.FC<EventSectionProps> = ({
   eventDate,
   eventLocation,
   currentDate,
-  startDate
+  startDate,
+  endDate,
+  isOpen,
 }) => {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
@@ -59,8 +63,8 @@ const EventSection: React.FC<EventSectionProps> = ({
   return (
     <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <div className="backdrop-blur-md bg-black/30 rounded-xl p-6 sm:p-10 border border-emerald-400/20 shadow-2xl">
-        <span className="inline-block px-4 py-1 bg-emerald-500/80 text-white text-sm font-medium rounded-full mb-4">
-          Em breve
+        <span className={`inline-block px-4 py-1 text-white text-sm font-medium rounded-full mb-4 ${currentDateObj > new Date(endDate) ? 'bg-red-500' : isOpen ? 'bg-green-500' : 'bg-emerald-500/80'}`}>
+          {currentDateObj > new Date(endDate) ? 'Inscrições encerradas' : isOpen ? 'Inscrições abertas' : 'Em breve'}
         </span>
         
         <h1 className="text-4xl sm:text-5xl font-bold text-emerald-300 mb-4">
@@ -80,29 +84,35 @@ const EventSection: React.FC<EventSectionProps> = ({
             <MapPin className="w-5 h-5 mr-2 text-emerald-400" />
             <span>{eventLocation}</span>
           </div>
-          <div className="flex items-center text-emerald-200 sm:col-span-2">
-            <Clock className="w-5 h-5 mr-2 text-emerald-400" />
-            <span>Inscrições abrem em:</span>
-          </div>
+            <div className="flex items-center text-emerald-200 sm:col-span-2">
+              <Clock className="w-5 h-5 mr-2 text-emerald-400" />
+              <span>{currentDateObj > new Date(endDate) ? "Inscrições encerradas" : isOpen ? "Inscrições abertas:" : "Inscrições abrem em:"}</span>
+            </div>
         </div>
         
-        <CountdownTimer targetDate={startDateObj} currentDate={currentDateObj} />
+  {(!isOpen && currentDateObj <= new Date(endDate)) ? (
+    <CountdownTimer targetDate={startDateObj} currentDate={currentDateObj} />
+  ) : (
+    <div style={{visibility: 'hidden', height: '64px'}}>
+      <CountdownTimer targetDate={startDateObj} currentDate={currentDateObj} />
+    </div>
+  )}
         
         <div className="mt-10 flex flex-col sm:flex-row gap-4 items-center justify-center">
-          <a 
-            href={`https://www.instagram.com/feupam/`} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="w-full sm:w-auto px-8 py-3 bg-white/10 backdrop-blur-sm text-emerald-200 border border-emerald-400/20 font-medium rounded-lg shadow-lg hover:bg-emerald-500/20 transition-all duration-300"
-          >
-            Saiba mais
-          </a>
-          <a 
-            href="/perfil" 
-            className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-          >
-            Atualize seus dados
-          </a>
+            <a 
+              href={`https://www.instagram.com/feupam/`} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="w-full sm:w-auto px-8 py-3 bg-white/10 backdrop-blur-sm text-emerald-200 border border-emerald-400/20 font-medium rounded-lg shadow-lg hover:bg-emerald-500/20 transition-all duration-300"
+            >
+              Saiba mais
+            </a>
+            <a 
+              href="/perfil" 
+              className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            >
+              {isOpen ? "Inscrição" : "Atualize seus dados"}
+            </a>
         </div>
       </div>
       <div className="mt-10">

@@ -11,6 +11,8 @@ interface Event {
   date: string;
   location: string;
   startDate: string;
+  endDate: string;
+  isOpen: boolean;
 }
 
 interface EventCarouselProps {
@@ -27,6 +29,36 @@ export default function EventCarousel({
   selectedIndex,
 }: EventCarouselProps) {
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+
+    if (Math.abs(distance) < minSwipeDistance) return;
+
+    if (distance > 0) {
+      // Swipe left
+      scrollRight();
+    } else {
+      // Swipe right
+      scrollLeft();
+    }
+
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
 
   const scrollLeft = () => {
     const container = document.getElementById('event-carousel');
@@ -64,37 +96,68 @@ export default function EventCarousel({
   };
 
   return (
-    <div className="w-full flex justify-center">
+    <div className="w-full flex flex-col items-center">
+      {/* Navigation Menu */}
+      <div className="w-full mb-8">
+        <div className="flex justify-center gap-2 md:gap-4">
+          {events.map((event, index) => (
+            <button
+              key={event.id}
+              onClick={() => {
+                setScrollPosition(index);
+                onEventSelect(index);
+                const container = document.getElementById('event-carousel');
+                if (container) {
+                  container.scrollTo({
+                    left: container.offsetWidth * index,
+                    behavior: 'smooth'
+                  });
+                }
+              }}
+              className={`text-sm px-4 py-2 rounded-full transition-all transform hover:scale-105 ${
+                selectedIndex === index
+                  ? 'bg-emerald-400 text-white shadow-lg bg-emerald-200/50'
+                  : 'bg-black/50 text-emerald-200 hover:bg-emerald-400 hover:text-white'
+              }`}
+            >
+              {event.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Carousel Container */}
-      <div className="relative w-full max-w-5xl rounded-2xl overflow-hidden">
+      <div className="relative w-full max-w-5xl">
         {/* Navigation Arrows */}
         <button
-        onClick={scrollLeft}
-        className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-30 p-2 md:p-4 rounded-full bg-purple-600/70 hover:bg-purple-500/90 transition-all transform hover:scale-110"
-        aria-label="Previous event"
+          onClick={scrollLeft}
+          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-emerald-500/70 hover:bg-emerald-500/90 transition-all transform hover:scale-110"
+          aria-label="Previous event"
         >
-        <ChevronLeft size={24} className="text-white" />
+          <ChevronLeft size={24} className="text-white" />
         </button>
 
         <button
-        onClick={scrollRight}
-        className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-30 p-2 md:p-4 rounded-full bg-purple-600/70 hover:bg-purple-500/90 transition-all transform hover:scale-110"
-        aria-label="Next event"
+          onClick={scrollRight}
+          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-emerald-500/70 hover:bg-emerald-500/90 transition-all transform hover:scale-110"
+          aria-label="Next event"
         >
-        <ChevronRight size={24} className="text-white" />
+          <ChevronRight size={24} className="text-white" />
         </button>
 
         {/* Carousel Track */}
         <div
           id="event-carousel"
-          className="flex overflow-x-hidden snap-x snap-mandatory"
+          className="flex overflow-x-hidden snap-x snap-mandatory rounded-2xl"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {events.map((event, index) => (
             <div
               key={event.id}
-              className="min-w-[80%] md:min-w-[60%] lg:min-w-[50%] flex-shrink-0 snap-center px-4 md:px-8 transform transition-transform"
-              style={{ transform: `translateX(${selectedIndex === index ? '0' : '0'}px)` }}
+              className="min-w-full w-full flex-shrink-0 snap-center px-8 md:px-12"
             >
               <EventSection
                 eventName={event.name}
@@ -103,6 +166,8 @@ export default function EventCarousel({
                 eventLocation={event.location}
                 currentDate={currentDate}
                 startDate={event.startDate}
+                endDate={event.endDate}
+                isOpen={event.isOpen}
               />
             </div>
           ))}
