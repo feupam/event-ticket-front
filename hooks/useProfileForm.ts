@@ -6,6 +6,7 @@ import type { UserProfile } from '@/types/user';
 import { useCallback, useState } from 'react';
 import userService from '@/services/userService';
 import { useRouter } from 'next/navigation';
+import { useEvents } from '@/hooks/useEvents';
 
 interface UseProfileFormProps {
   initialData?: Partial<UserProfile>;
@@ -19,6 +20,7 @@ export function useProfileForm({ initialData, redirectToEvent, ticketKind = 'ful
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { getEventByUuid } = useEvents();
   
   // Log para depuração dos dados iniciais
   console.log('Dados iniciais recebidos:', initialData);
@@ -100,10 +102,19 @@ export function useProfileForm({ initialData, redirectToEvent, ticketKind = 'ful
         description: 'Suas informações foram salvas com sucesso!',
       });
 
-      // Se houver um evento para redirecionar, vai direto para a página de reserva
+      // Se houver um evento para redirecionar, verifica se o evento está aberto
       if (redirectToEvent) {
         setTimeout(() => {
-          router.push(`/reserva/${redirectToEvent}/${ticketKind}`);
+          // Busca o evento para verificar se está aberto
+          const event = getEventByUuid(redirectToEvent);
+          
+          // Se o evento não estiver aberto (isOpen === false), redireciona para countdown/federa
+          if (event && event.isOpen === false) {
+            router.push('/countdown/federa');
+          } else {
+            // Segue o fluxo normal para a página de reserva
+            router.push(`/reserva/${redirectToEvent}/${ticketKind}`);
+          }
         }, 1000);
       }
     } catch (error: any) {
@@ -146,7 +157,7 @@ export function useProfileForm({ initialData, redirectToEvent, ticketKind = 'ful
     } finally {
       setIsSubmitting(false);
     }
-  }, [toast, redirectToEvent, router, ticketKind, initialData, alergiaExtra, medicamentoExtra, form]);
+  }, [toast, redirectToEvent, router, ticketKind, initialData, alergiaExtra, medicamentoExtra, form, getEventByUuid]);
 
   // Função para exibir detalhes sobre erros de validação
   const handleValidationErrors = (errors: any) => {
