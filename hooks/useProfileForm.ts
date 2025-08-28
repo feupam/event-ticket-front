@@ -94,19 +94,14 @@ export function useProfileForm({ initialData, redirectToEvent, ticketKind = 'ful
       }
       
       // Exibe toast de sucesso
-      if (typeof window !== 'undefined') {
-        // Forçar exibição do toast com setTimeout
-        setTimeout(() => {
-          toast({
-            title: 'Perfil atualizado',
-            description: 'Suas informações foram salvas com sucesso!',
-            variant: 'default'
-          });
-        }, 100);
-      }
+      // Exibe toast de sucesso
+      toast({
+        title: 'Perfil atualizado',
+        description: 'Suas informações foram salvas com sucesso!',
+      });
 
+      // Se houver um evento para redirecionar, vai direto para a página de reserva
       if (redirectToEvent) {
-        // Redireciona para a página de reserva em vez de checkout
         setTimeout(() => {
           router.push(`/reserva/${redirectToEvent}/${ticketKind}`);
         }, 1000);

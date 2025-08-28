@@ -21,9 +21,13 @@ export default function ReservationPage({ params }: ReservationPageProps) {
   const { eventId, ticketKind } = params;
   const [step, setStep] = useState<'checking' | 'reserving' | 'existing' | 'success' | 'error' | 'cancelled' | 'waiting'>('checking');
   const router = useRouter();
-  // Use uma ref para controlar se já iniciamos o processamento
   const processingRef = useRef(false);
   const [localReservationData, setLocalReservationData] = useState<ReservationData | null>(null);
+
+  // Only initialize hook if we have the required params
+  const reservationProcess = useReservationProcess(
+    eventId && ticketKind ? { eventId, ticketKind } : undefined
+  );
 
   const {
     isLoading,
@@ -38,10 +42,7 @@ export default function ReservationPage({ params }: ReservationPageProps) {
     purchaseTicket,
     checkReservationStatus,
     tryPurchase
-  } = useReservationProcess({
-    eventId,
-    ticketKind
-  });
+  } = reservationProcess;
 
   useEffect(() => {
     if (reservationData) {
@@ -86,19 +87,19 @@ export default function ReservationPage({ params }: ReservationPageProps) {
             console.log("Reserva existente encontrada no localStorage");
             
             // Verifica o status da reserva para garantir que ainda é válida
-            const status = await checkReservationStatus();
+            const reservationStatus = await checkReservationStatus();
             
-            if (status === 'cancelled') {
+            if (reservationStatus.status === 'cancelled') {
               console.log("Reserva existente está cancelada");
               setLocalReservationData(parsed);
               setStep('cancelled');
               return;
-            } else if (status === 'waiting') {
+            } else if (reservationStatus.status === 'waiting') {
               console.log("Usuário está na lista de espera");
               setLocalReservationData(parsed);
               setStep('waiting');
               return;
-            } else if (status === 'pago') {
+            } else if (reservationStatus.status === 'pago') {
               console.log("Usuário já pagou");
               router.push('/meus-ingressos');
               return;

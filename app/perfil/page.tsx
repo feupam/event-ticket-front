@@ -11,6 +11,9 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 export default function ProfilePage() {
   const { profile, loading, error } = useUserProfile();
   const router = useRouter();
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const eventName = searchParams.get('eventName');
+  const isOpen = searchParams.get('isOpen') === 'true';
 
   return (
     <ProtectedRoute>
@@ -30,7 +33,10 @@ export default function ProfilePage() {
         </div>
       ) : (
         <div className="container py-10">
-          <ProfileForm initialData={profile} />
+          <ProfileForm 
+            initialData={profile} 
+            redirectToEvent={eventName || undefined}
+          />
         </div>
       )}
     </ProtectedRoute>

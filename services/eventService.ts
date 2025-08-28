@@ -18,7 +18,7 @@ export interface EventStatusResponse {
 
 export const eventService = {
   async getEventStatus(eventId: string): Promise<EventStatusResponse> {
-    const response = await api.get<EventStatusResponse>(`/events/${eventId}/event-status`);
+    const response = await api.get<EventStatusResponse>(`/events/event-status`);
     return response.data;
   }
 };

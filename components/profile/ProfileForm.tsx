@@ -10,7 +10,7 @@ import { formSections, UserProfile } from '@/types/user';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { InputMask } from '@/components/ui/input-mask';
 import type { ControllerRenderProps, UseFormStateReturn, ControllerFieldState } from 'react-hook-form';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -35,6 +35,7 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
   const [medicamentoExtra, setMedicamentoExtra] = useState('');
   const { toast } = useToast();
   const [formError, setFormError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { form, onSubmit: originalOnSubmit, isSubmitting } = useProfileForm({ 
     initialData: initialData || undefined,
     redirectToEvent,
@@ -52,13 +53,28 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
     }
   }, [initialData]);
 
-  // Wrapper para capturar erros
-  const onSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
     
+    // Verifica se há campos obrigatórios vazios
+    const requiredFields = ['name', 'church', 'pastor', 'ddd', 'cellphone', 'cep', 'cpf', 'data_nasc'] as const;
+    const emptyFields = requiredFields.filter(field => !form.getValues(field));
+    
+    if (emptyFields.length > 0) {
+      setFormError('Por favor, preencha todos os campos obrigatórios antes de salvar.');
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Alguns campos obrigatórios estão vazios. Verifique o formulário.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      // Configura os valores de alergia e medicamento antes de enviar
+      // Configura os valores de alergia e medicamento
       if (form.getValues('alergia') === 'Sim') {
         form.setValue('alergia', alergiaExtra ? `Sim - ${alergiaExtra}` : 'Sim');
       }
@@ -68,48 +84,51 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
       
       await originalOnSubmit(e);
       
-      // Exibe toast de sucesso como fallback (caso não tenha sido exibido pelo hook)
-      setTimeout(() => {
-        toast({
-          title: 'Perfil atualizado',
-          description: 'Suas informações foram salvas com sucesso!',
-        });
-      }, 300);
-      
+      toast({
+        title: 'Perfil atualizado',
+        description: 'Suas informações foram salvas com sucesso!',
+      });
     } catch (error: any) {
       console.error('Erro capturado no ProfileForm:', error);
       
-      // Detecta erro de CPF duplicado
-      if (error.message && 
-         (error.message.includes('CPF already exists') || 
-          error.message.includes('User with this CPF already exists'))) {
-        setFormError('Já existe um usuário cadastrado com este CPF.');
-        
-        // Também exibe como toast para garantir que seja visto
-        setTimeout(() => {
-          toast({
-            title: 'Erro no cadastro',
-            description: 'Já existe um usuário cadastrado com este CPF.',
-            variant: 'destructive'
-          });
-        }, 300);
-      } else {
-        setFormError(error.message || 'Ocorreu um erro ao salvar seu perfil. Tente novamente.');
-        
-        // Exibe erro também como toast
-        setTimeout(() => {
-          toast({
-            title: 'Erro ao atualizar perfil',
-            description: error.message || 'Ocorreu um erro ao salvar seu perfil. Tente novamente.',
-            variant: 'destructive'
-          });
-        }, 300);
+      // Erros de autenticação serão tratados pelo interceptor do axios
+      if (error.response?.status === 401) {
+        return;
       }
+      
+      if (error.message?.includes('CPF already exists') || 
+          error.message?.includes('User with this CPF already exists')) {
+        const msg = 'Já existe um usuário cadastrado com este CPF.';
+        setFormError(msg);
+        toast({
+          title: 'Erro no cadastro',
+          description: msg,
+          variant: 'destructive'
+        });
+      } else {
+        const msg = error.message || 'Ocorreu um erro ao salvar seu perfil. Tente novamente.';
+        setFormError(msg);
+        toast({
+          title: 'Erro no cadastro',
+          description: msg,
+          variant: 'destructive'
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <>
+      {isLoading && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-card p-6 rounded-lg shadow-lg flex items-center gap-4">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="text-lg font-medium">Processando...</span>
+          </div>
+        </div>
+      )}
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle>Perfil do Usuário</CardTitle>
@@ -122,25 +141,29 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
               <AlertDescription>{formError}</AlertDescription>
             </Alert>
           )}
-          
           <Form {...form}>
-            <form onSubmit={onSubmit} className="space-y-8">
-              {formSections.map((section) => (
-                <div key={section.title} className="space-y-4">
-                  <div className="space-y-1">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {formSections.map((section, index) => (
+                <div key={section.title}>
+                  {index > 0 && <Separator className="my-8" />}
+                  <div className="space-y-6">
                     <h3 className="text-lg font-semibold">{section.title}</h3>
-                    <Separator />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {section.fields.map((field) => {
-                      const showField = field.name.startsWith('responsavel') || field.name.startsWith('documento_responsavel') || field.name.startsWith('ddd_responsavel') || field.name.startsWith('cellphone_responsavel') ? true : (!field.dependsOn || field.dependsOn.value(form.getValues(field.dependsOn.field)));
+                      const showField = field.name.startsWith('responsavel') || 
+                                      field.name.startsWith('documento_responsavel') || 
+                                      field.name.startsWith('ddd_responsavel') || 
+                                      field.name.startsWith('cellphone_responsavel') 
+                                        ? form.getValues('idade') < 18 
+                                        : true;
+
                       if (!showField) return null;
+
                       return (
-                        <div key={field.name} className="space-y-2">
+                        <div key={field.name}>
                           <FormField
                             control={form.control}
-                            name={field.name}
-                            render={({ field: formField, fieldState, formState }: FormFieldProps) => (
+                            name={field.name as keyof UserProfile}
+                            render={({ field: formField }) => (
                               <FormItem>
                                 <FormLabel className="flex items-center gap-1">
                                   {field.label}
@@ -153,7 +176,7 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
                                       onValueChange={formField.onChange}
                                     >
                                       <SelectTrigger>
-                                        <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
+                                        <SelectValue placeholder={field.placeholder} />
                                       </SelectTrigger>
                                       <SelectContent>
                                         {field.options?.map((option) => (
@@ -164,7 +187,7 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
                                       </SelectContent>
                                     </Select>
                                   ) : field.type === 'textarea' ? (
-                                    <Textarea {...formField} />
+                                    <Textarea {...formField} placeholder={field.placeholder} />
                                   ) : field.mask ? (
                                     <InputMask
                                       mask={field.mask}
@@ -202,7 +225,9 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
                           />
                           {field.name === 'alergia' && form.getValues('alergia') === 'Sim' && (
                             <div className="space-y-1">
-                              <FormLabel className="flex items-center gap-1">Qual alergia? <span className="text-red-500">*</span></FormLabel>
+                              <FormLabel className="flex items-center gap-1">
+                                Qual alergia? <span className="text-red-500">*</span>
+                              </FormLabel>
                               <Input
                                 value={alergiaExtra}
                                 onChange={e => setAlergiaExtra(e.target.value)}
@@ -212,7 +237,9 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
                           )}
                           {field.name === 'medicamento' && form.getValues('medicamento') === 'Sim' && (
                             <div className="space-y-1">
-                              <FormLabel className="flex items-center gap-1">Qual medicamento? <span className="text-red-500">*</span></FormLabel>
+                              <FormLabel className="flex items-center gap-1">
+                                Qual medicamento? <span className="text-red-500">*</span>
+                              </FormLabel>
                               <Input
                                 value={medicamentoExtra}
                                 onChange={e => setMedicamentoExtra(e.target.value)}
@@ -248,4 +275,4 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
       </Card>
     </>
   );
-} 
+}
