@@ -3,11 +3,13 @@ import React, { useState, useEffect } from 'react';
 interface BackgroundCarouselProps {
   images: string[];
   transitionTime?: number;
+  overlayOpacity?: string; // ex: "bg-black/20" ou "bg-black/50"
 }
 
 const BackgroundCarousel: React.FC<BackgroundCarouselProps> = ({ 
   images, 
-  transitionTime = 7000 
+  transitionTime = 7000,
+  overlayOpacity = "bg-black/30" // valor padrão se não for passado
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -31,11 +33,12 @@ const BackgroundCarousel: React.FC<BackgroundCarouselProps> = ({
             backgroundImage: `url('${image}')`,
             opacity: index === currentImageIndex ? 1 : 0,
             zIndex: index === currentImageIndex ? -1 : -2,
-            filter: ' brightness(0.5)',
+            filter: 'brightness(0.7)', // pode ajustar aqui também
           }}
         />
       ))}
-      <div className="absolute inset-0 bg-black/60" />
+      {/* aqui usamos a prop */}
+      <div className={`absolute inset-0 ${overlayOpacity}`} />
     </div>
   );
 };

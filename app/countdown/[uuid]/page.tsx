@@ -2,10 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import BackgroundCarousel from '@/components/countdown/BackgroundCarousel';
-import EventSection from '@/components/countdown/EventSection';
-import { api } from '@/services/api';
-import { useEvents } from '@/hooks/useEvents';
-
+import EventCarousel from '@/components/countdown/EventCarousel';
+import { eventService, EventData } from '@/services/eventService';
+import { useCurrentEventContext } from '@/contexts/CurrentEventContext';
 
 const carouselImages = [
   'https://federa-acamps.pages.dev/images/carousel/bg%20(1).jpeg',
@@ -27,28 +26,48 @@ interface CountdownPageProps {
 
 export default function CountdownStandalone({ params }: CountdownPageProps) {
   const { uuid } = params;
-  const { events, loading: eventsLoading, getEventByUuid } = useEvents();
+  const { setCurrentEventFromData } = useCurrentEventContext();
   const [currentDate, setCurrentDate] = useState<string | null>(null);
+  const [events, setEvents] = useState<EventData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedEventIndex, setSelectedEventIndex] = useState(0);
+
+  // Função para atualizar o contexto quando seleciona um evento
+  const handleEventSelect = (index: number) => {
+    setSelectedEventIndex(index);
+    if (events[index]) {
+      console.log('[Countdown] Usuário selecionou evento:', events[index].name, 'index:', index);
+      console.log('[Countdown] Definindo no contexto:', events[index]);
+      setCurrentEventFromData(events[index]);
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
-        const response = await api.get(`/events/${uuid}/event-status`);
-        setCurrentDate(response.data.currentDate);
+        const response = await eventService.getEventStatus(uuid);
+        console.log("API response:", response);
+
+        setCurrentDate(response.currentDate || null);
+        setEvents(response.events ?? []);
+        
+        // NÃO define evento inicial automaticamente
+        // Contexto permanece vazio até usuário clicar
+        console.log('[Countdown] Dados carregados, aguardando seleção do usuário');
       } catch (err) {
+        console.error(err);
         setError('Não foi possível carregar os dados do evento');
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, [uuid]);
+  }, [uuid]); // Remove setCurrentEventFromData das dependências para evitar loop
 
-  // Aguarda o carregamento dos eventos
-  if (eventsLoading || loading) {
+  // loading state
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <p className="text-white">Carregando...</p>
@@ -56,40 +75,42 @@ export default function CountdownStandalone({ params }: CountdownPageProps) {
     );
   }
 
-  const event = getEventByUuid(uuid);
-  if (!event) {
+  // erro
+  if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <p className="text-red-500">Evento não encontrado</p>
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
+  // caso não tenha eventos
+  if (events.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <p className="text-yellow-500">Nenhum evento disponível</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black overflow-hidden">
-     
-      <BackgroundCarousel images={carouselImages} transitionTime={6000} />
-      <div className="w-full max-w-2xl p-8 z-10">
+      <BackgroundCarousel images={carouselImages} transitionTime={6000} overlayOpacity="bg-black/30" />
+      <div className="w-full max-w-5xl p-8 z-10">
         <div className="flex flex-col items-center justify-center">
-          {error && (
-            <p className="text-red-500">
-              {error}
-              <br />
-              <p>Ocorreu um erro ao carregar os dados do evento. Por favor, tente novamente mais tarde.</p>
-            </p>
-          )}
-          {event && currentDate && (
-            <EventSection
-              eventName="FederaAcamps 2025"
-              eventDescription="O acampamento mais esperado do ano, com os convidados Andreia Vargas, Pr. Daniel Simoncelos e Miquéias Medeiros."
-              eventDate="18 a 22 de Junho"
-              eventLocation={event.location}
+          {currentDate && (
+            <EventCarousel
               currentDate={currentDate}
-              startDate={event.startDate}
+              events={events.map(event => ({
+                ...event,
+                description: event.description ?? "",
+              }))}
+              onEventSelect={handleEventSelect}
+              selectedIndex={selectedEventIndex}
             />
           )}
         </div>
       </div>
     </div>
   );
-} 
+}

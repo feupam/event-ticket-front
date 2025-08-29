@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import { useToast } from '@/components/ui/use-toast';
 import { userProfileSchema } from '@/lib/schemas/user-profile';
 import type { UserProfile } from '@/types/user';
@@ -13,15 +13,17 @@ interface UseProfileFormProps {
   ticketKind?: string;
   alergiaExtra?: string;
   medicamentoExtra?: string;
+  isOpen?: boolean;
 }
 
-export function useProfileForm({ initialData, redirectToEvent, ticketKind = 'full', alergiaExtra = '', medicamentoExtra = '' }: UseProfileFormProps = {}) {
+export function useProfileForm({ initialData, redirectToEvent, ticketKind = 'full', alergiaExtra = '', medicamentoExtra = '', isOpen = true }: UseProfileFormProps = {}): {
+  form: UseFormReturn<UserProfile>;
+  onSubmit: (e: React.FormEvent | UserProfile) => Promise<any>;
+  isSubmitting: boolean;
+} {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Log para depuração dos dados iniciais
-  console.log('Dados iniciais recebidos:', initialData);
   
   const form = useForm<UserProfile>({
     resolver: zodResolver(userProfileSchema),
@@ -32,15 +34,20 @@ export function useProfileForm({ initialData, redirectToEvent, ticketKind = 'ful
   });
 
   const onSubmit = useCallback(async (e: React.FormEvent | UserProfile) => {
+    console.log('[useProfileForm] onSubmit chamado com:', e);
+    
     // Verifica se o parâmetro é um evento de formulário
     if (e && 'preventDefault' in e && typeof e.preventDefault === 'function') {
+      console.log('[useProfileForm] Prevenindo default do evento');
       e.preventDefault();
     }
     
     // Se o argumento for um evento de formulário, pegamos os dados do form
     const data = e && 'preventDefault' in e ? form.getValues() : e as UserProfile;
+    console.log('[useProfileForm] Dados do formulário:', data);
     
     try {
+      console.log('[useProfileForm] Setando isSubmitting=true');
       setIsSubmitting(true);
       
       // Garante que userType esteja definido e converte idade para número
@@ -77,42 +84,37 @@ export function useProfileForm({ initialData, redirectToEvent, ticketKind = 'ful
       }
       
       // Log dados antes de enviar para a API
-      console.log('Dados do formulário enviados:', dataToSubmit);
-      
-      // Determina se é um novo perfil verificando se tem campos essenciais preenchidos no initialData
       const isNewProfile = !initialData?.name || !initialData?.cpf;
-      console.log('É um novo perfil?', isNewProfile);
+      console.log('[useProfileForm] isNewProfile:', isNewProfile);
       
       // Usa o método apropriado com base na existência do perfil
       let updatedProfile;
+      // Sempre salvamos o perfil
       if (isNewProfile) {
-        console.log('Criando novo perfil...');
+        console.log('[useProfileForm] Criando novo perfil...');
         updatedProfile = await userService.createProfile(dataToSubmit);
       } else {
-        console.log('Atualizando perfil existente...');
+        console.log('[useProfileForm] Atualizando perfil existente...');
         updatedProfile = await userService.updateProfile(dataToSubmit);
       }
+      console.log('[useProfileForm] Perfil salvo com sucesso:', updatedProfile);
       
-      // Exibe toast de sucesso
-      if (typeof window !== 'undefined') {
-        // Forçar exibição do toast com setTimeout
-        setTimeout(() => {
-          toast({
-            title: 'Perfil atualizado',
-            description: 'Suas informações foram salvas com sucesso!',
-            variant: 'default'
-          });
-        }, 100);
-      }
+      // Retorna o perfil atualizado sem fazer redirecionamento
+      // O redirecionamento será feito pelo ProfileForm baseado no isOpen
 
-      if (redirectToEvent) {
-        // Redireciona para a página de reserva em vez de checkout
-        setTimeout(() => {
-          router.push(`/reserva/${redirectToEvent}/${ticketKind}`);
-        }, 1000);
-      }
+      console.log('[useProfileForm] Exibindo toast de sucesso');
+      toast({
+        title: 'Perfil atualizado',
+        description: 'Suas informações foram salvas com sucesso!',
+      });
+
+      console.log('[useProfileForm] Retornando perfil atualizado');
+      return updatedProfile;
     } catch (error: any) {
-      console.error('Erro ao atualizar perfil:', error);
+      console.error('[useProfileForm] Erro ao atualizar perfil:', error);
+      console.error('[useProfileForm] Tipo do erro:', typeof error);
+      console.error('[useProfileForm] Message:', error?.message);
+      console.error('[useProfileForm] Stack:', error?.stack);
       
       // Trata erros da API para exibir mensagens mais amigáveis
       let errorMessage = 'Ocorreu um erro ao salvar suas informações. Tente novamente.';
@@ -149,6 +151,7 @@ export function useProfileForm({ initialData, redirectToEvent, ticketKind = 'ful
       
       throw error;
     } finally {
+      console.log('[useProfileForm] Finalizando execução, setando isSubmitting=false');
       setIsSubmitting(false);
     }
   }, [toast, redirectToEvent, router, ticketKind, initialData, alergiaExtra, medicamentoExtra, form]);

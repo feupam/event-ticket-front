@@ -29,11 +29,11 @@ export function useAuth() {
     try {
       setLoading(true);
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      router.push('/perfil');
+      const result = await signInWithPopup(auth, provider);
+      return !!result.user; // Retorna true se o login foi bem sucedido
     } catch (error) {
       console.error('Erro ao fazer login com Google:', error);
-      throw error;
+      return false;
     } finally {
       setLoading(false);
     }

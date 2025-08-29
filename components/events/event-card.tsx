@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { Event } from '@/types/event';
 
 interface EventCardProps {
@@ -13,21 +13,6 @@ interface EventCardProps {
 }
 
 export default function EventCard({ event, index = 0 }: EventCardProps) {
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return {
-      date: new Intl.DateTimeFormat('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      }).format(date),
-      time: new Intl.DateTimeFormat('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date)
-    };
-  };
-
   const { date, time } = formatDateTime(event.startDate);
   
   return (

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Event } from '@/types/event';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatFullDateTime } from '@/lib/utils';
 
 interface EventListProps {
   events: Event[];
@@ -19,17 +19,6 @@ export function EventList({ events = [] }: EventListProps) {
     );
   }
 
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {events.map((event) => (
@@ -41,7 +30,7 @@ export function EventList({ events = [] }: EventListProps) {
           <CardContent className="flex-1">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Data: {formatDateTime(event.startDate)}
+                Data: {formatFullDateTime(event.startDate)}
               </p>
               <p className="text-sm text-muted-foreground">
                 Vagas: {event.maxGeneralSpots}

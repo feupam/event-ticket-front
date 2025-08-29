@@ -15,7 +15,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
-        router.push('/login');
+        // Preserva os parâmetros da URL atual no redirecionamento
+        const currentUrl = window.location.pathname + window.location.search;
+        const loginUrl = `/login?redirect=${encodeURIComponent(currentUrl)}`;
+        router.push(loginUrl);
       }
     });
 

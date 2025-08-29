@@ -6,10 +6,41 @@ import { Loader2 } from 'lucide-react';
 
 export function GoogleLoginButton() {
   const { signInWithGoogle, loading } = useAuth();
+  const searchParams = typeof window !== 'undefined' 
+    ? new URLSearchParams(window.location.search) 
+    : new URLSearchParams();
+  
+  const handleLogin = async () => {
+    const success = await signInWithGoogle();
+    if (success) {
+      const redirect = searchParams.get('redirect') || '/';
+      
+      // Se há um parâmetro redirect, usa ele diretamente (já inclui todos os parâmetros)
+      if (redirect && redirect !== '/') {
+        window.location.href = redirect;
+      } else {
+        // Fallback para o comportamento anterior
+        const eventId = searchParams.get('eventId');
+        const eventName = searchParams.get('eventName');
+        const isOpen = searchParams.get('isOpen');
+        
+        if (eventName) {
+          const params = new URLSearchParams();
+          if (eventId) params.set('eventId', eventId);
+          if (eventName) params.set('eventName', eventName);
+          if (isOpen) params.set('isOpen', isOpen);
+          
+          window.location.href = `/perfil?${params.toString()}`;
+        } else {
+          window.location.href = '/';
+        }
+      }
+    }
+  };
 
   return (
     <Button
-      onClick={signInWithGoogle}
+      onClick={handleLogin}
       disabled={loading}
       className="w-full flex items-center justify-center gap-2"
     >

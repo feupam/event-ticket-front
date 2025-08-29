@@ -115,6 +115,7 @@ export default function EditProfileForEventPage({ params }: EditProfileForEventP
         initialData={processedProfile} 
         redirectToEvent={eventId}
         ticketKind={ticketKind}
+        isOpen={true} // Na página de edição, sempre consideramos que está aberto pois o usuário já está no fluxo de compra
       />
     );
   };

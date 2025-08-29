@@ -29,6 +29,7 @@ export interface UserFormFields {
   name: keyof UserProfile;
   type: 'text' | 'tel' | 'number' | 'date' | 'select' | 'textarea';
   required: boolean;
+  placeholder?: string;
   mask?: string;
   validation?: {
     pattern?: RegExp;
@@ -55,19 +56,22 @@ export const formSections: FormSection[] = [
         label: 'Nome Completo',
         name: 'name',
         type: 'text',
-        required: true
+        required: true,
+        placeholder: 'Digite seu nome completo'
       },
       {
         label: 'Igreja',
         name: 'church',
         type: 'text',
-        required: true
+        required: true,
+        placeholder: 'Digite o nome da sua igreja'
       },
       {
         label: 'Pastor',
         name: 'pastor',
         type: 'text',
-        required: true
+        required: true,
+        placeholder: 'Digite o nome do seu pastor'
       },
       {
         label: 'Gênero',
@@ -84,13 +88,15 @@ export const formSections: FormSection[] = [
         name: 'data_nasc',
         type: 'text',
         required: true,
-        mask: '00/00/0000'
+        mask: '00/00/0000',
+        placeholder: 'DD/MM/AAAA'
       },
       {
         label: 'Idade',
         name: 'idade',
         type: 'number',
-        required: true
+        required: true,
+        placeholder: 'Digite sua idade'
       }
     ]
   },
@@ -102,14 +108,16 @@ export const formSections: FormSection[] = [
         name: 'ddd',
         type: 'tel',
         required: true,
-        mask: '00'
+        mask: '00',
+        placeholder: '00'
       },
       {
         label: 'Celular',
         name: 'cellphone',
         type: 'tel',
         required: true,
-        mask: '00000-0000'
+        mask: '00000-0000',
+        placeholder: '00000-0000'
       }
     ]
   },
@@ -121,14 +129,16 @@ export const formSections: FormSection[] = [
         name: 'cpf',
         type: 'text',
         required: true,
-        mask: '000.000.000-00'
+        mask: '000.000.000-00',
+        placeholder: '000.000.000-00'
       },
       {
         label: 'CEP',
         name: 'cep',
         type: 'text',
         required: true,
-        mask: '00.000-000'
+        mask: '00.000-000',
+        placeholder: '00.000-000'
       }
     ]
   },
