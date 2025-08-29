@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import BackgroundCarousel from '@/components/countdown/BackgroundCarousel';
 import EventCarousel from '@/components/countdown/EventCarousel';
 import { eventService, EventData } from '@/services/eventService';
+import { useCurrentEventContext } from '@/contexts/CurrentEventContext';
 
 const carouselImages = [
   'https://federa-acamps.pages.dev/images/carousel/bg%20(1).jpeg',
@@ -25,11 +26,22 @@ interface CountdownPageProps {
 
 export default function CountdownStandalone({ params }: CountdownPageProps) {
   const { uuid } = params;
+  const { setCurrentEventFromData } = useCurrentEventContext();
   const [currentDate, setCurrentDate] = useState<string | null>(null);
   const [events, setEvents] = useState<EventData[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedEventIndex, setSelectedEventIndex] = useState(0);
+
+  // Função para atualizar o contexto quando seleciona um evento
+  const handleEventSelect = (index: number) => {
+    setSelectedEventIndex(index);
+    if (events[index]) {
+      console.log('[Countdown] Usuário selecionou evento:', events[index].name, 'index:', index);
+      console.log('[Countdown] Definindo no contexto:', events[index]);
+      setCurrentEventFromData(events[index]);
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -40,6 +52,10 @@ export default function CountdownStandalone({ params }: CountdownPageProps) {
 
         setCurrentDate(response.currentDate || null);
         setEvents(response.events ?? []);
+        
+        // NÃO define evento inicial automaticamente
+        // Contexto permanece vazio até usuário clicar
+        console.log('[Countdown] Dados carregados, aguardando seleção do usuário');
       } catch (err) {
         console.error(err);
         setError('Não foi possível carregar os dados do evento');
@@ -48,7 +64,7 @@ export default function CountdownStandalone({ params }: CountdownPageProps) {
       }
     }
     fetchData();
-  }, [uuid]);
+  }, [uuid]); // Remove setCurrentEventFromData das dependências para evitar loop
 
   // loading state
   if (loading) {
@@ -89,7 +105,7 @@ export default function CountdownStandalone({ params }: CountdownPageProps) {
                 ...event,
                 description: event.description ?? "",
               }))}
-              onEventSelect={setSelectedEventIndex}
+              onEventSelect={handleEventSelect}
               selectedIndex={selectedEventIndex}
             />
           )}

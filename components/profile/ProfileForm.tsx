@@ -16,6 +16,8 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useToast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useCurrentEventContext } from '@/contexts/CurrentEventContext';
+import { useRouter } from 'next/navigation';
 
 interface FormFieldProps {
   field: ControllerRenderProps<UserProfile, keyof UserProfile>;
@@ -27,21 +29,33 @@ export interface ProfileFormProps {
   initialData?: UserProfile | null;
   redirectToEvent?: string;
   ticketKind?: string;
+  isOpen: boolean;
 }
 
-export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' }: ProfileFormProps) {
+export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full', isOpen = true }: ProfileFormProps) {
   const { theme } = useTheme();
   const [alergiaExtra, setAlergiaExtra] = useState('');
   const [medicamentoExtra, setMedicamentoExtra] = useState('');
   const { toast } = useToast();
   const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { currentEvent, isCurrentEventOpen, refreshCurrentEvent, setCurrentEventByName } = useCurrentEventContext();
+  const router = useRouter();
+  
+  // Se não tem evento no contexto, busca o evento padrão
+  useEffect(() => {
+    if (!currentEvent) {
+      setCurrentEventByName('federa');
+    }
+  }, [currentEvent, setCurrentEventByName]);
+  
   const { form, onSubmit: originalOnSubmit, isSubmitting } = useProfileForm({ 
     initialData: initialData || undefined,
     redirectToEvent,
     ticketKind,
     alergiaExtra,
-    medicamentoExtra
+    medicamentoExtra,
+    isOpen
   });
 
   useEffect(() => {
@@ -82,22 +96,29 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
         form.setValue('medicamento', medicamentoExtra ? `Sim - ${medicamentoExtra}` : 'Sim');
       }
       
+      // Salva o perfil
       await originalOnSubmit(e);
       
-      toast({
-        title: 'Perfil atualizado',
-        description: 'Suas informações foram salvas com sucesso!',
-      });
-    } catch (error: any) {
-      console.error('Erro capturado no ProfileForm:', error);
+      // Redirecionamento baseado no status do evento
+      if (currentEvent) {
+        if (isCurrentEventOpen) {
+          // Se evento está aberto: vai para reserva
+          window.location.href = `/reserva/${currentEvent.name}/${ticketKind}`;
+        } else {
+          // Se evento está fechado: vai para página do evento (mostra card com startDate/endDate)
+          window.location.href = `/event/${currentEvent.name}`;
+        }
+      } else {
+        // Fallback: vai para lista de eventos
+        window.location.href = '/eventos';
+      }
       
-      // Erros de autenticação serão tratados pelo interceptor do axios
+    } catch (error: any) {
       if (error.response?.status === 401) {
         return;
       }
       
-      if (error.message?.includes('CPF already exists') || 
-          error.message?.includes('User with this CPF already exists')) {
+      if (error.message?.includes('CPF already exists')) {
         const msg = 'Já existe um usuário cadastrado com este CPF.';
         setFormError(msg);
         toast({
@@ -109,7 +130,7 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
         const msg = error.message || 'Ocorreu um erro ao salvar seu perfil. Tente novamente.';
         setFormError(msg);
         toast({
-          title: 'Erro no cadastro',
+          title: 'Erro ao salvar perfil',
           description: msg,
           variant: 'destructive'
         });
@@ -119,160 +140,177 @@ export function ProfileForm({ initialData, redirectToEvent, ticketKind = 'full' 
     }
   };
 
-  return (
-    <>
-      {isLoading && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-card p-6 rounded-lg shadow-lg flex items-center gap-4">
-            <Loader2 className="h-6 w-6 animate-spin" />
-            <span className="text-lg font-medium">Processando...</span>
-          </div>
-        </div>
-      )}
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle>Perfil do Usuário</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {formError && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Erro</AlertTitle>
-              <AlertDescription>{formError}</AlertDescription>
-            </Alert>
-          )}
-          <Form {...form}>
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {formSections.map((section, index) => (
-                <div key={section.title}>
-                  {index > 0 && <Separator className="my-8" />}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold">{section.title}</h3>
-                    {section.fields.map((field) => {
-                      const showField = field.name.startsWith('responsavel') || 
-                                      field.name.startsWith('documento_responsavel') || 
-                                      field.name.startsWith('ddd_responsavel') || 
-                                      field.name.startsWith('cellphone_responsavel') 
-                                        ? form.getValues('idade') < 18 
-                                        : true;
+  const renderField = ({ field, fieldState }: FormFieldProps): JSX.Element => {
+    const fieldConfig = formSections
+      .flatMap(section => section.fields)
+      .find(f => f.name === field.name);
 
-                      if (!showField) return null;
+    if (!fieldConfig) return <div />;
 
-                      return (
-                        <div key={field.name}>
-                          <FormField
-                            control={form.control}
-                            name={field.name as keyof UserProfile}
-                            render={({ field: formField }) => (
-                              <FormItem>
-                                <FormLabel className="flex items-center gap-1">
-                                  {field.label}
-                                  {field.required && <span className="text-red-500">*</span>}
-                                </FormLabel>
-                                <FormControl>
-                                  {field.type === 'select' ? (
-                                    <Select
-                                      value={String(formField.value || '')}
-                                      onValueChange={formField.onChange}
-                                    >
-                                      <SelectTrigger>
-                                        <SelectValue placeholder={field.placeholder} />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {field.options?.map((option) => (
-                                          <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  ) : field.type === 'textarea' ? (
-                                    <Textarea {...formField} placeholder={field.placeholder} />
-                                  ) : field.mask ? (
-                                    <InputMask
-                                      mask={field.mask}
-                                      name={field.name}
-                                      value={String(formField.value || '')}
-                                      onChange={(maskedValue) => {
-                                        const rawValue = maskedValue.replace(/\D/g, '');
-                                        formField.onChange(rawValue);
-                                      }}
-                                    />
-                                  ) : field.name === 'idade' ? (
-                                    <Input 
-                                      {...formField} 
-                                      type="number" 
-                                      min="0"
-                                      max="120"
-                                      onChange={(e) => {
-                                        const value = e.target.value;
-                                        const numValue = value ? parseInt(value, 10) : 0;
-                                        formField.onChange(numValue);
-                                      }}
-                                    />
-                                  ) : (
-                                    <Input {...formField} type={field.type} />
-                                  )}
-                                </FormControl>
-                                {field.required && (
-                                  <FormDescription className="text-xs text-muted-foreground">
-                                    Campo obrigatório
-                                  </FormDescription>
-                                )}
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          {field.name === 'alergia' && form.getValues('alergia') === 'Sim' && (
-                            <div className="space-y-1">
-                              <FormLabel className="flex items-center gap-1">
-                                Qual alergia? <span className="text-red-500">*</span>
-                              </FormLabel>
-                              <Input
-                                value={alergiaExtra}
-                                onChange={e => setAlergiaExtra(e.target.value)}
-                                required
-                              />
-                            </div>
-                          )}
-                          {field.name === 'medicamento' && form.getValues('medicamento') === 'Sim' && (
-                            <div className="space-y-1">
-                              <FormLabel className="flex items-center gap-1">
-                                Qual medicamento? <span className="text-red-500">*</span>
-                              </FormLabel>
-                              <Input
-                                value={medicamentoExtra}
-                                onChange={e => setMedicamentoExtra(e.target.value)}
-                                required
-                              />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+    const { label, type, placeholder, options, mask, required } = fieldConfig;
+    const hasError = fieldState.error;
+
+    if (type === 'select') {
+      return (
+        <FormItem>
+          <FormLabel className={required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}>
+            {label}
+          </FormLabel>
+          <Select 
+            onValueChange={field.onChange} 
+            value={String(field.value || '')}
+            disabled={isLoading || isSubmitting}
+          >
+            <FormControl>
+              <SelectTrigger className={hasError ? 'border-red-500' : ''}>
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {options?.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
               ))}
-              <div className="flex justify-end pt-4">
-                <Button 
-                  type="submit" 
-                  className="w-full md:w-auto"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Salvando...
-                    </>
-                  ) : (
-                    'Salvar Alterações'
-                  )}
-                </Button>
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      );
+    }
+
+    if (type === 'textarea') {
+      return (
+        <FormItem>
+          <FormLabel className={required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}>
+            {label}
+          </FormLabel>
+          <FormControl>
+            <Textarea
+              {...field}
+              placeholder={placeholder}
+              className={`resize-none ${hasError ? 'border-red-500' : ''}`}
+              disabled={isLoading || isSubmitting}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      );
+    }
+
+    if (mask) {
+      return (
+        <FormItem>
+          <FormLabel className={required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}>
+            {label}
+          </FormLabel>
+          <FormControl>
+            <InputMask
+              {...field}
+              value={String(field.value || '')}
+              mask={mask}
+              placeholder={placeholder}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      );
+    }
+
+    return (
+      <FormItem>
+        <FormLabel className={required ? "after:content-['*'] after:ml-0.5 after:text-red-500" : ""}>
+          {label}
+        </FormLabel>
+        <FormControl>
+          <Input
+            {...field}
+            type={type}
+            placeholder={placeholder}
+            className={hasError ? 'border-red-500' : ''}
+            disabled={isLoading || isSubmitting}
+          />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    );
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+        {formError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro</AlertTitle>
+            <AlertDescription>{formError}</AlertDescription>
+          </Alert>
+        )}
+
+        {formSections.map((section, sectionIndex) => (
+          <Card key={sectionIndex} className="border-2 border-gray-200 dark:border-gray-700">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-primary text-center">
+                {section.title}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {section.fields.map((fieldConfig) => (
+                  <div key={fieldConfig.name}>
+                    <FormField
+                      control={form.control}
+                      name={fieldConfig.name as keyof UserProfile}
+                      render={({ field, fieldState }) => renderField({ field, fieldState, formState: form.formState })}
+                    />
+
+                    {fieldConfig.name === 'alergia' && form.watch('alergia') === 'Sim' && (
+                      <div className="mt-2">
+                        <FormLabel>Especifique a alergia:</FormLabel>
+                        <Input
+                          value={alergiaExtra}
+                          onChange={(e) => setAlergiaExtra(e.target.value)}
+                          placeholder="Descreva a alergia..."
+                          disabled={isLoading || isSubmitting}
+                        />
+                      </div>
+                    )}
+
+                    {fieldConfig.name === 'medicamento' && form.watch('medicamento') === 'Sim' && (
+                      <div className="mt-2">
+                        <FormLabel>Especifique o medicamento:</FormLabel>
+                        <Input
+                          value={medicamentoExtra}
+                          onChange={(e) => setMedicamentoExtra(e.target.value)}
+                          placeholder="Descreva o medicamento..."
+                          disabled={isLoading || isSubmitting}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </>
+            </CardContent>
+          </Card>
+        ))}
+
+        <div className="flex justify-center">
+          <Button 
+            type="submit" 
+            disabled={isLoading || isSubmitting}
+            className="min-w-[140px]"
+          >
+            {(isLoading || isSubmitting) ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              'Salvar Alterações'
+            )}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

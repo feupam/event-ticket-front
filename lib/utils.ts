@@ -14,21 +14,64 @@ export function formatCurrency(value: number, currency: string = 'BRL'): string 
   }).format(value);
 }
 
+// Funções de formatação de data e hora padronizadas
 export function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(date);
+  try {
+    const date = new Date(dateStr);
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(date);
+  } catch {
+    return 'A definir';
+  }
 }
 
-export function formatTime(timeStr: string): string {
-  const [hours, minutes] = timeStr.split(':');
-  const hour = parseInt(hours);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const formattedHour = hour % 12 || 12;
-  return `${formattedHour}:${minutes} ${ampm}`;
+export function formatTime(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    return new Intl.DateTimeFormat('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  } catch {
+    return 'A definir';
+  }
+}
+
+export function formatDateTime(dateStr: string): { date: string; time: string } {
+  try {
+    const date = new Date(dateStr);
+    return {
+      date: new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }).format(date),
+      time: new Intl.DateTimeFormat('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date)
+    };
+  } catch {
+    return { date: 'A definir', time: 'A definir' };
+  }
+}
+
+export function formatFullDateTime(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  } catch {
+    return 'A definir';
+  }
 }
 
 export function getTimeRemaining(targetDate: string): {

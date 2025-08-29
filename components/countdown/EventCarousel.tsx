@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import EventSection from './EventSection';
 
@@ -32,68 +32,53 @@ export default function EventCarousel({
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const scrollLeft = useCallback(() => {
+    const container = document.getElementById('event-carousel');
+    if (container) {
+      const newIndex = Math.max(0, selectedIndex - 1);
+      container.scrollTo({
+        left: container.offsetWidth * newIndex,
+        behavior: 'smooth'
+      });
+      onEventSelect(newIndex);
+      setScrollPosition(newIndex);
+    }
+  }, [selectedIndex, onEventSelect]);
+
+  const scrollRight = useCallback(() => {
+    const container = document.getElementById('event-carousel');
+    if (container) {
+      const newIndex = Math.min(events.length - 1, selectedIndex + 1);
+      container.scrollTo({
+        left: container.offsetWidth * newIndex,
+        behavior: 'smooth'
+      });
+      onEventSelect(newIndex);
+      setScrollPosition(newIndex);
+    }
+  }, [selectedIndex, onEventSelect, events.length]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
-  };
+  }, []);
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
     setTouchEnd(e.targetTouches[0].clientX);
-  };
+  }, []);
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     if (!touchStart || !touchEnd) return;
     
     const distance = touchStart - touchEnd;
-    const minSwipeDistance = 50;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
 
-    if (Math.abs(distance) < minSwipeDistance) return;
-
-    if (distance > 0) {
-      // Swipe left
+    if (isLeftSwipe) {
       scrollRight();
-    } else {
-      // Swipe right
+    } else if (isRightSwipe) {
       scrollLeft();
     }
-
-    setTouchStart(0);
-    setTouchEnd(0);
-  };
-
-  const scrollLeft = () => {
-    const container = document.getElementById('event-carousel');
-    if (container) {
-      const newPosition = scrollPosition - 1;
-      const finalPosition = newPosition < 0 ? events.length - 1 : newPosition;
-      setScrollPosition(finalPosition);
-      onEventSelect(finalPosition);
-
-      if (newPosition < 0) {
-        container.scrollTo({
-          left: container.scrollWidth - container.offsetWidth,
-          behavior: 'smooth',
-        });
-      } else {
-        container.scrollBy({ left: -container.offsetWidth, behavior: 'smooth' });
-      }
-    }
-  };
-
-  const scrollRight = () => {
-    const container = document.getElementById('event-carousel');
-    if (container) {
-      const newPosition = scrollPosition + 1;
-      const finalPosition = newPosition >= events.length ? 0 : newPosition;
-      setScrollPosition(finalPosition);
-      onEventSelect(finalPosition);
-
-      if (newPosition >= events.length) {
-        container.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        container.scrollBy({ left: container.offsetWidth, behavior: 'smooth' });
-      }
-    }
-  };
+  }, [touchStart, touchEnd, scrollLeft, scrollRight]);
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -103,7 +88,11 @@ export default function EventCarousel({
           {events.map((event, index) => (
             <button
               key={event.id}
-              onClick={() => {
+              onClick={(e) => {
+                console.log('🔥 CLIQUE DETECTADO!', event.name, index);
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('[EventCarousel] Botão clicado para evento:', event.name, 'index:', index);
                 setScrollPosition(index);
                 onEventSelect(index);
                 const container = document.getElementById('event-carousel');
@@ -160,6 +149,7 @@ export default function EventCarousel({
               className="min-w-full w-full flex-shrink-0 snap-center px-8 md:px-12"
             >
               <EventSection
+                eventId={event.id}
                 eventName={event.name}
                 eventDescription={event.description}
                 eventDate={event.date}
@@ -179,6 +169,7 @@ export default function EventCarousel({
             <button
               key={index}
               onClick={() => {
+                console.log('[EventCarousel] Indicador clicado para index:', index);
                 const container = document.getElementById('event-carousel');
                 if (container) {
                   setScrollPosition(index);

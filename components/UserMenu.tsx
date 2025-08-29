@@ -14,24 +14,24 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="cursor-pointer">
+        <Avatar className="cursor-pointer h-8 w-8 sm:h-9 sm:w-9">
           <AvatarImage src={user.photoURL || undefined} />
-          <AvatarFallback>
+          <AvatarFallback className="text-xs sm:text-sm">
             {user.displayName?.charAt(0) || user.email?.charAt(0)}
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem className="flex flex-col items-start gap-1">
-          <span className="font-medium">{user.displayName}</span>
-          <span className="text-sm text-muted-foreground">{user.email}</span>
+      <DropdownMenuContent align="end" className="w-56 mr-2">
+        <DropdownMenuItem className="flex flex-col items-start gap-1 p-3">
+          <span className="font-medium text-sm truncate w-full">{user.displayName}</span>
+          <span className="text-xs text-muted-foreground truncate w-full">{user.email}</span>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/perfil" className="cursor-pointer">
+          <Link href="/perfil" className="cursor-pointer w-full">
             Meu Perfil
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>
+        <DropdownMenuItem className="p-0">
           <LogoutButton />
         </DropdownMenuItem>
       </DropdownMenuContent>

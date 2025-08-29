@@ -14,10 +14,12 @@ export function ClientLayout({ children }: ClientLayoutProps) {
   return (
     <ErrorBoundary>
       <Suspense fallback={<div>Carregando...</div>}>
-        <div className="relative flex min-h-screen flex-col">
+        <div className="relative flex min-h-screen flex-col overflow-x-hidden">
           <Header />
           <OfflineNotice />
-          {children}
+          <main className="flex-1 w-full overflow-x-hidden">
+            {children}
+          </main>
         </div>
         <Toaster />
       </Suspense>

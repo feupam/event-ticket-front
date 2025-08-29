@@ -2,8 +2,10 @@ import React from 'react';
 import CountdownTimer from './CountdownTimer';
 import { CalendarCheck, MapPin, Clock } from 'lucide-react';
 import { TipsCarousel } from './TipsCarousel';
+import { useCurrentEventContext } from '@/contexts/CurrentEventContext';
 
 interface EventSectionProps {
+  eventId: number;
   eventName: string;
   eventDescription: string;
   eventDate: string;
@@ -15,6 +17,7 @@ interface EventSectionProps {
 }
 
 const EventSection: React.FC<EventSectionProps> = ({
+  eventId,
   eventName,
   eventDescription,
   eventDate,
@@ -24,7 +27,37 @@ const EventSection: React.FC<EventSectionProps> = ({
   endDate,
   isOpen,
 }) => {
+  const { setCurrentEventFromData } = useCurrentEventContext();
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  console.log('🎯 [EventSection] Renderizando evento:', eventName, 'isOpen:', isOpen);
+
+  // Função para definir contexto e navegar
+  const handleEventClick = () => {
+    console.log('🔥 CLIQUE NO BOTÃO DE INSCRIÇÃO!', eventName);
+    console.log('🔥 DADOS DO EVENTO:', { eventId, eventName, isOpen });
+    
+    // Define o evento no contexto
+    const eventData = {
+      id: eventId,
+      name: eventName,
+      description: eventDescription,
+      date: eventDate,
+      location: eventLocation,
+      startDate: startDate,
+      endDate: endDate,
+      isOpen: isOpen
+    };
+    
+    console.log('[EventSection] Definindo evento no contexto:', eventData);
+    setCurrentEventFromData(eventData);
+    
+    // Aguarda um pouco antes de navegar para garantir que o contexto foi definido
+    setTimeout(() => {
+      console.log('[EventSection] Navegando para login...');
+      window.location.href = `/login?redirect=/perfil&eventId=${eventId}&eventName=${encodeURIComponent(eventName)}&isOpen=${isOpen}`;
+    }, 100);
+  };
 
   // Converte currentDate para um objeto Date
   const currentDateObj = new Date(currentDate);
@@ -99,20 +132,48 @@ const EventSection: React.FC<EventSectionProps> = ({
   )}
         
         <div className="mt-10 flex flex-col sm:flex-row gap-4 items-center justify-center">
-            <a 
-              href={`https://www.instagram.com/feupam/`} 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <button 
+              onClick={(e) => {
+                console.log('🔍 CLIQUE NO SAIBA MAIS!', eventName);
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Define o evento no contexto
+                const eventData = {
+                  id: eventId,
+                  name: eventName,
+                  description: eventDescription,
+                  date: eventDate,
+                  location: eventLocation,
+                  startDate: startDate,
+                  endDate: endDate,
+                  isOpen: isOpen
+                };
+                
+                console.log('[EventSection] Definindo evento no contexto para Saiba mais:', eventData);
+                setCurrentEventFromData(eventData);
+                
+                // Aguarda um pouco antes de navegar para garantir que o contexto foi definido
+                setTimeout(() => {
+                  console.log('[EventSection] Navegando para página do evento...');
+                  window.location.href = `/event/${encodeURIComponent(eventName)}`;
+                }, 100);
+              }}
               className="w-full sm:w-auto px-8 py-3 bg-white/10 backdrop-blur-sm text-emerald-200 border border-emerald-400/20 font-medium rounded-lg shadow-lg hover:bg-emerald-500/20 transition-all duration-300"
             >
               Saiba mais
-            </a>
-            <a 
-              href={`/login?redirect=/perfil&eventName=${encodeURIComponent(eventName)}&isOpen=${isOpen}`}
+            </button>
+            <button 
+              onClick={(e) => {
+                console.log('🚨 CLIQUE CAPTURADO!', e);
+                e.preventDefault();
+                e.stopPropagation();
+                handleEventClick();
+              }}
               className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
             >
               {isOpen ? "Inscrição" : "Atualize seus dados"}
-            </a>
+            </button>
         </div>
       </div>
       <div className="mt-10">

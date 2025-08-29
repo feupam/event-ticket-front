@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { auth } from '@/lib/firebase';
+import { apiLogger } from '@/lib/debug';
 
 // Custom error type for payment errors
 interface PaymentError extends Error {
@@ -8,9 +9,6 @@ interface PaymentError extends Error {
 
 // Verificar a variável de ambiente
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-// Log para debug
-console.log('[API Service] API_URL:', API_URL || 'Não definida');
 
 // Se não estiver definida, apenas log de aviso
 if (!API_URL) {

@@ -9,6 +9,7 @@ import { useReservationProcess, ReservationData } from '@/hooks/useReservationPr
 import { Loader2, CheckCircle2, XCircle, Clock, AlertTriangle } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { api } from '@/lib/api';
+import { useCurrentEventContext } from '@/contexts/CurrentEventContext';
 
 interface ReservationPageProps {
   params: {
@@ -23,6 +24,22 @@ export default function ReservationPage({ params }: ReservationPageProps) {
   const router = useRouter();
   const processingRef = useRef(false);
   const [localReservationData, setLocalReservationData] = useState<ReservationData | null>(null);
+  const { currentEvent, isCurrentEventOpen, setCurrentEventByName } = useCurrentEventContext();
+
+  // Verificar se o evento está aberto
+  useEffect(() => {
+    if (eventId && eventId !== 'undefined') {
+      setCurrentEventByName(eventId);
+    }
+  }, [eventId, setCurrentEventByName]);
+
+  // Se o evento não estiver aberto, redirecionar para perfil
+  useEffect(() => {
+    if (currentEvent && !isCurrentEventOpen) {
+      console.log('[ReservationPage] Evento não está aberto, redirecionando para perfil');
+      router.push('/perfil');
+    }
+  }, [currentEvent, isCurrentEventOpen, router]);
 
   // Only initialize hook if we have the required params
   const reservationProcess = useReservationProcess(

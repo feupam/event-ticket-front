@@ -34,4 +34,5 @@ export interface Event {
   salesStart?: string;
   availability?: number;
   isHighDemand?: boolean;
+  isOpen: boolean;
 } 

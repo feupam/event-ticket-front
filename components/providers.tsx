@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from '@/components/theme-provider';
 import { EventsProvider } from '@/contexts/EventsContext';
+import { CurrentEventProvider } from '@/contexts/CurrentEventContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
 import { PropsWithChildren, createContext, useState, useContext, useEffect, useRef } from 'react';
@@ -170,10 +171,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <AuthProvider>
         <EventsProvider>
-          <InstallmentsProvider>
-            {children}
-            <Toaster />
-          </InstallmentsProvider>
+          <CurrentEventProvider>
+            <InstallmentsProvider>
+              {children}
+              <Toaster />
+            </InstallmentsProvider>
+          </CurrentEventProvider>
         </EventsProvider>
       </AuthProvider>
     </ThemeProvider>
